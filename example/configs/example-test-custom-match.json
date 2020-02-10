@@ -1,0 +1,31 @@
+[
+    {
+        "metadata": {
+            "publish_anonymously": false,
+            "authors": "",
+            "contact_email": "noreply@gmail.com",
+            "method_name": "Example: Upright SIFT (OpenCV)",
+            "method_description": "SIFT with 2048 features, using custom matcher",
+            "link_to_website": "https://opencv.org",
+            "link_to_pdf": "",
+        },
+        "config_common": {
+            "json_label": "rootsift-upright-2k-custom_match-cv-8pt",
+            "keypoint": "sift-def",
+            "descriptor": "rootsift-upright",
+            "num_keypoints": 2048,
+        },
+        "config_phototourism_stereo": {
+            "use_custom_matches": true,
+            "custom_matches_name": "custom_matcher",
+            "geom": {
+                "method": "cv2-8pt"
+            },
+        },
+        "config_phototourism_multiview": {
+            "use_custom_matches": true,
+            "custom_matches_name": "custom_matcher",
+            "colmap": {},
+        },
+    },
+]

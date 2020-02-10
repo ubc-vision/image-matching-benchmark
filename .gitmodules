@@ -1,0 +1,10 @@
+[submodule "third_party/colmap"]
+	path = third_party/colmap
+	url = https://github.com/colmap/colmap.git
+[submodule "third_party/cne"]
+	path = third_party/cne
+	url = https://github.com/vcg-uvic/learned-correspondence-release.git
+	branch = sfm_benchmark
+[submodule "third_party/DFE"]
+	path = third_party/DFE
+	url = https://github.com/ducha-aiki/DFE
