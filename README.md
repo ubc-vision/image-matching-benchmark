@@ -236,7 +236,7 @@ To use this option, set the `use_custom_matches` field to `true`: `matcher` and 
 
 If you are submitting a single match file, name it `matches.h5`: it will be used for both stereo and multi-view.
 We recommend tuning stereo and multi-view separately: if so, name the stereo match file as `matches_stereo_0` and the multiview file as `matches_multiview`.
-For stereo, we will compute poses with the specified matches, given to the 8-point algorithm: please note that you may use other robust matchers (RANSAC variants) along with custom matches for validation, but this is not allowed for challenge submissions.
+For stereo, we will compute poses with the specified matches, given to the 8-point algorithm: please note that you may use other robust matchers (RANSAC variants) along with custom matches for validation, but this is not allowed for challenge submissions: if you want to run custom matchers and then RANSAC, do it yourself.
 For multiview, we give these matches to Colmap.
 
 In order to study the randomness in RANSAC/Colmap, we compute typically three runs for every submission. In order to mimic this with custom matches, you may optinally submit three match files for stereo, named as `matches_stereo_0`, `matches_stereo_1`, and `matches_stereo_2`; the variability in the multi-view task comes mostly from Bundle Adjustment, so consider only one file.
