@@ -15,7 +15,7 @@
 import os
 import numpy as np
 
-from third_party.colmap.scripts.python.read_model import (qvec2rotmat,
+from third_party.colmap.scripts.python.read_write_model import (qvec2rotmat,
                                                          read_images_binary)
 from utils.eval_helper import evaluate_R_t
 from utils.path_helper import (get_colmap_mark_file, get_colmap_output_path,
