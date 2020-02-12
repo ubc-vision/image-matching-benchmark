@@ -18,7 +18,7 @@ from copy import deepcopy
 from collections import OrderedDict
 import numpy as np
 
-from third_party.colmap.scripts.python.read_model import (read_model,
+from third_party.colmap.scripts.python.read_write_model import (read_model,
                                                           qvec2rotmat)
 from utils.colmap_helper import (get_best_colmap_index,
                                  get_colmap_image_path_list,
