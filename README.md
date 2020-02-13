@@ -58,7 +58,7 @@ The codebase is written in Python 3. The easiest way to handle dependencies is v
 
 ```bash
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.exe
+bash Miniconda3-latest-Linux-x86_64.sh
 ```
 
 You can then create an environment with all dependencies. We provide examples for Ubuntu and CentOS 7 on the `system` folder. They may need some tweaking for your specific set-up.
