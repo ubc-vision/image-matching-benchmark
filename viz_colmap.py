@@ -28,8 +28,8 @@ from utils.path_helper import (get_kp_file, get_colmap_output_path,
                                get_colmap_viz_folder)
 from utils.colmap_helper import (get_best_colmap_index,
                                  get_colmap_image_path_list)
-from third_party.colmap.scripts.python.read_model import (read_images_binary,
-                                                         read_points3d_binary)
+from third_party.colmap.scripts.python.read_write_model import (
+        read_images_binary, read_points3d_binary)
 
 
 def main(cfg):
