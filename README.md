@@ -1,23 +1,22 @@
 # Image Matching Benchmark
 
-This is the code release for the [Image Matching benchmark](https://vision.uvic.ca/image-matching-challenge), which is the basis of a challenge on wide-baseline image matching co-located with the CVPR 2020 workshop on [Image Matching: Local Features and Beyond](https://image-matching-workshop.github.io/). Its goal is to allow researchers to evaluate methods for local feature extraction and matching, using downstream metrics such as the accuracy of the final poses, on a standardized benchmark, against and alongside state-of-the-art methods for every stage of the traditional image matching pipeline.
+This is the code release for the Image Matching benchmark, which is the basis of a [challenge](https://vision.uvic.ca/image-matching-challenge) on wide-baseline image matching co-located with the CVPR 2020 workshop on [Image Matching: Local Features and Beyond](https://image-matching-workshop.github.io/). Its goal is to allow researchers to evaluate methods for local feature extraction and matching, using downstream metrics such as the accuracy of the final poses, on a standardized benchmark, against and alongside state-of-the-art methods for every stage of the traditional image matching pipeline.
 
-Submissions to the challenge require writing a configuration file and, typically, providing pre-computed features and/or matches, which are given to the framework as input. As such, participation in the challenge does not necessarily require running this code: the organizers will process the submissions on a private test set. This release aims to help with the following:
-* Finding the right hyperparameters on a validation set of three scenes, for which we provide ground truth.
-* Help introspect and compare different methods on the validation set.
-* Centralize different methods for feature extraction and matching to allow researchers to freely combine them.
+Running the benchmark requires writing a configuration file and, typically, providing pre-computed features (and matches). We provide a validation set with three sequences. Challenge submissions will be sent to the organizers and processed on a private test set, for which we provide images, but not the ground truth. This release aims to help with the following:
+* Centralize feature extraction and matching methods in a modular framework.
+* Find the right hyperparameters on a validation set.
+* Provide introspection tools.
 
 For more information, please refer to the following:
 
 * [Challenge and leaderboards](https://vision.uvic.ca/image-matching-challenge)
+   * [Terms and conditions](https://vision.uvic.ca/image-matching-challenge/submit/index.html#tac)
 * [Data download link](https://vision.uvic.ca/imw-challenge/index.md)
-   * The test images are valid.
-   * The validation data extracts to `./tmp/data/phototourism`: valid otherwise (will fix soon).
-   * The training data will be reuploaded with only upright images (will fix soon).
+   * Warning: The validation data extracts to `./tmp/data/phototourism` (will fix soon).
+   * Warning: The training data will be reuploaded with only upright images (will fix soon).
 * [Baselines repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines)
-   * Please wait/inquire if empty.
 * [Setting up a scalable Slurm cluster on GCP](https://github.com/etrulls/slurm-gcp)
-   * Please wait/inquire if empty.
+   * Work in progress, may not exist yet.
 
 ## Citation
 
@@ -25,24 +24,32 @@ We are in the process of writing a paper about the benchmark and the state of th
 
 ## Motivation
 
-Local features are the foundation of a large number of applications in computer vision, and (arguably) remain the state of the art in 3D reconstruction and re-localization. New methods have historically been evaluated on small, de-centralized datasets with intermediate metrics, specially for local features, such as keypoint repeatability or descriptor matching score. This may misrepresent actual performance and hinder the development of new techniques. There is a clear need for new, large-scale benchmarks with comprehensive evaluation protocols and baselines. Towards this end, we held in 2019 the first edition of this challenge. We have greatly improved on it for its second edition, and open-sourced the codebase. It contains wrappers over dozens of state-of-the-art methods for extracting and matching local features.
+Local features are the foundation of a large number of applications in computer vision, and (arguably) remain the state of the art in 3D reconstruction and re-localization. New methods have historically been evaluated on small, de-centralized datasets with intermediate metrics, specially for local features, such as keypoint repeatability or descriptor matching score. This may misrepresent actual performance and hinder the development of new techniques. There is a clear need for new, large-scale benchmarks with comprehensive evaluation protocols and baselines. Towards this end, we held in 2019 the first edition of this challenge. We have greatly improved on it for its second edition, and open-sourced the codebase. It contains wrappers over dozens of state-of-the-art methods for extracting and matching local features, in a modular framework.
 
 We rely on rich, phototourism data. Our (pseudo-) ground truth comes from large-scale Structure-from-motion (SfM) reconstructions obtained with [Colmap](https://colmap.github.io/) with exhaustive matching, which produces accurate 6DOF poses. This solution allows us to consider images with large viewpoint and photometric differences.
 
 <div style="text-align: center;"><img src="example/img/trevi-canvas.jpg" alt="Examples" width="600px" /></div>
 
-The basic principle in our benchmark is that we can then subsample these subsets to make the problem "harder". The test set contains 10 scenes with 100 images each. We extract features for each one, match them exhaustively (within a scene), and feed the results to multiple tasks, such as wide-baseline stereo or multi-view reconstruction with small image subsets (5, 10, 25 images). More tasks are currently being developed.
+The core assumption behind this benchmark is that we can then subsample these subsets to make the problem much harder. The test set contains 10 scenes with 100 images each. We extract features for each one, match them exhaustively (within a scene), and feed the results to multiple tasks, such as wide-baseline stereo or multi-view reconstruction with small image subsets (5, 10, 25 images). More tasks are currently being developed.
 
 ## Installation
 
 Ground truth data and benchmark should be placed on the same folder, e.g.:
 
-```ls ~
+```
+$ ls ~
 data
 image-matching-benchmark
+[...]
+
+$ ls ~/data
+phototourism
+
+$ ls ~/data/phototourism/
+sacre_coeur      reichstag      st_peters_square
 ```
 
-At runtime, two more folders will be created at this level. All results (features, matches, stereo, etc) will be placed inside `benchmark-results`. Automated visualizations (see the challenge website for details) will be placed inside `benchmark-visualizations`.
+At runtime, two more folders will be created at this level. All results (features, matches, stereo, etc) will be placed inside `benchmark-results`. Automated visualizations (examples below) will be placed inside `benchmark-visualizations`.
 
 After cloning the repository, download third-party modules with the following:
 
@@ -50,9 +57,9 @@ After cloning the repository, download third-party modules with the following:
 git submodule update --init
 ```
 
-We assume [OpenCV](https://github.com/opencv/opencv) is installed in your system: you can do this easily from conda. Please note that some algorithms, such as SIFT, are **not free** and have to be installed from the [OpenCV contrib repository](https://github.com/opencv/opencv_contrib). The benchmark will work without it if you use your own features/matchers.
+The benchmark requires [OpenCV](https://github.com/opencv/opencv): you can do this easily from conda. Please note that some feature methods, such as SIFT, are **not free** and have to be installed from the [OpenCV contrib repository](https://github.com/opencv/opencv_contrib): this is only required if you want to extract these features.
 
-The benchmark requires a lot of compute and is heavily parallelized, relying on the [Slurm job scheduler](https://www.schedmd.com/). We provide instructions to set up a scalable, on-demand cluster on the Google Cloud Platform (GCP) [here](https://github.com/etrulls/slurm-gcp), as an example: remember that GCP offers [$300 in free credit](https://cloud.google.com/free) to new users. Alternatively, it is possible to run the benchmark on a single thread without setting up Slurm, with the `--run_mode=interactive` flag. Please keep in mind that this may take some time: on the validation set, this requires running stereo for ~15k image pairs and ~500 (small) 3D reconstructions with Colmap.
+This codebase requires a lot of compute and is heavily parallelized, relying on the [Slurm job scheduler](https://www.schedmd.com/). We provide instructions to set up a scalable, on-demand cluster on the Google Cloud Platform (GCP) [here](https://github.com/etrulls/slurm-gcp) as an example: remember that GCP offers [$300 in free credit](https://cloud.google.com/free) to new users. Alternatively, it is possible to run it on a single thread with the `--run_mode=interactive` flag. Please keep in mind that this may take some time: on the validation set, it requires running stereo for ~15k image pairs and ~500 (small) 3D reconstructions with Colmap.
 
 The codebase is written in Python 3. The easiest way to handle dependencies is via conda, which can be installed as follows (on Linux):
 
@@ -67,9 +74,9 @@ You can then create an environment with all dependencies. We provide examples fo
 conda env create -f system/<your_choice>.yml
 ```
 
-Colmap should be installed separately, and its binaries be visible in the system path. You can follow the documentation [here](https://colmap.github.io/install.html) to do so.
+Colmap should be installed separately, and its binaries be visible in the system path. You can follow [this documentation](https://colmap.github.io/install.html).
 
-For stereo, we provide wrappers around OpenCV RANSAC, which is far from the state of the art. We also provide wrappers around GC-RANSAC, DEGENSAC and MAGSAC (for performance, we recommend the last two). Note that you may not need any of these if you want to provide a final set of matches directly, bypassing standard robust estimators. You can install them into your conda environment as follows.
+For stereo, we provide wrappers around OpenCV RANSAC, which is far from the state of the art ([examples](https://github.com/opencv/opencv/pull/16498#issue-370691424)). We also provide wrappers around GC-RANSAC, DEGENSAC and MAGSAC. Note that you may not need any of these if you want to provide a final set of matches directly, bypassing standard robust estimators. You can install them into your conda environment as follows.
 
 For DEGENSAC:
 ```
@@ -86,11 +93,11 @@ For GC-RANSAC:
 pip install git+https://github.com/danini/graph-cut-ransac@benchmark-version
 ```
 
-Alternatively, follow the instructions to compile them. GCP deployments based on CentOS may require some changes to the CMake configuration files: we will clarify this on [the appropriate repository](https://github.com/etrulls/slurm-gcp).
+Alternatively, follow the instructions to compile them. GCP deployments based on CentOS may require some changes to the CMake configuration files: we will clarify this [here](https://github.com/etrulls/slurm-gcp).
 
 ## Configuration
 
-Metadata and hyperparameters are specified via configuration files written in the JSON format. You can find some examples under `example/config`. They look like this:
+Metadata and hyperparameters are specified via configuration files written in the JSON format. You can find some examples under `example/configs`. They look like this:
 
 ```
 {
@@ -113,7 +120,7 @@ Metadata and hyperparameters are specified via configuration files written in th
      (...)
 ```
 
-Metadata is only necessary for challenge submissions. The fields in `config_common` are common across all tasks and datasets. The number of features and descriptor dimensionality will determine the category the submission will fall on for the challenge: please refer to the website for details.
+Metadata is only necessary for challenge submissions. The fields in `config_common` are common across all tasks and datasets. The number of features (maximum number of features for any one image, not an average) and descriptor dimensionality will determine the category the submission will fall on for the challenge: please refer to the website for details.
 
 You can then specify a different configuration for each task. For example:
 
@@ -247,13 +254,11 @@ You can import custom match files with the following command:
 python import_features.py --path_features=<path_to_folder> --kp_name=<kp_name> --desc_name=<desc_name> --match_name=<match_name>
 ```
 
-(Custom matches are a very recent addition: please reach out to us via email/github issues if you encounter problems using it.)
+(Custom matches are a recent addition: please reach out to us via email/github issues if you encounter problems using it.)
 
-## Practical considerations
+## Terms and conditions
 
-Challenge submissions have additional restrictions in place, such as for instance in the maximum number of iterations in the RANSAC loop, or banning robust estimators which assume known intrinsics and estimate the Essential matrix instead of the Fundamental matrix (which are implemented in the benchmark for the sake of completeness). Please refer to the website for details.
-
-Please note that valid challenge submissions require additional details: e.g. it is not okay to train on images that show scenes present in our test data, or running RANSAC for millions of iterations while providing custom matches. We trust in the good faith of challenge participants, but require short papers outlining the specifics used to generate the submission: these should be uploaded sometime after the deadline (please refer to the website for details).
+Challenge submissions have additional restrictions in place, such as for instance in the maximum number of iterations in the RANSAC loop, or banning robust estimators which assume known intrinsics and estimate the Essential matrix instead of the Fundamental matrix (which are implemented in the benchmark for the sake of completeness). Please refer to the [submission page](https://vision.uvic.ca/image-matching-challenge/submit/) on the website for further details.
 
 ## Usage
 
@@ -338,7 +343,7 @@ We are currently working on the following features:
 
 * Support for relative poses (stereo only), to allow direct (relative) pose regression.
 
-We are also working on integrating new datasets and tasks. These may not be available before the 2020 challenge deadline, but the organizers reserve the rights to change the terms of the challenge until April 1, 2020.
+We are also working on integrating new datasets and tasks. These may not be available before the 2020 challenge deadline, but the organizers reserve the rights to change the terms of the challenge before the deadline. Please refer to the [website](https://vision.uvic.ca/image-matching-challenge/submit/) for terms and conditions.
 
 ## Disclaimer
 
