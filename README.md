@@ -12,8 +12,6 @@ For more information, please refer to the following:
 * [Challenge and leaderboards](https://vision.uvic.ca/image-matching-challenge)
    * [Terms and conditions](https://vision.uvic.ca/image-matching-challenge/submit/index.html#tac)
 * [Data download link](https://vision.uvic.ca/imw-challenge/index.md)
-   * Warning: The validation data extracts to `./tmp/data/phototourism` (will fix soon).
-   * Warning: The training data will be reuploaded with only upright images (will fix soon).
 * [Baselines repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines)
 * [Setting up a scalable Slurm cluster on GCP](https://github.com/etrulls/slurm-gcp)
    * Work in progress, may not exist yet.
