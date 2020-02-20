@@ -12,6 +12,7 @@ For more information, please refer to the following:
 * [Challenge and leaderboards](https://vision.uvic.ca/image-matching-challenge)
    * [Terms and conditions](https://vision.uvic.ca/image-matching-challenge/submit/index.html#tac)
 * [Data download link](https://vision.uvic.ca/imw-challenge/index.md)
+  * Parsing the training data: see example on `example/training_data/parse_data.ipynb`.
 * [Baselines repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines)
 * [Setting up a scalable Slurm cluster on GCP](https://github.com/etrulls/slurm-gcp)
    * Work in progress, may not exist yet.
