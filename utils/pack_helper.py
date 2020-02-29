@@ -354,7 +354,7 @@ def compute_ATE(res_dict, cfg):
         # length, num_cameras, num 3d points, only when colmap succeeds
         if os.path.exists(colmap_res_path):
             # Read colmap models
-            _, images, _ = read_write_model(path=colmap_res_path, ext='.bin')
+            _, images, _ = read_model(path=colmap_res_path, ext='.bin')
             first_xyz, second_xyz = [], []
             for _, value in images.items():
 
@@ -456,7 +456,7 @@ def compute_colmap_stats(res_dict, cfg):
                                            str(get_best_colmap_index(cfg_bag)))
 
             # Read colmap models
-            cameras, images, points = read_write_model(path=colmap_res_path,
+            cameras, images, points = read_model(path=colmap_res_path,
                                                  ext='.bin')
             # Track length
             num_obs = []
