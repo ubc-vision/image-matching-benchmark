@@ -210,7 +210,7 @@ def import_features(cfg, data_list):
              (os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0]))):
 
             if os.path.isfile(fn_desc):
-                print('------ Matches file is provided, ignore descriptors')
+                print('------ Matches file is provided')
             print('------ Importing matches')
             if not cfg.match_name:
                 raise RuntimeError('Must define match_name')
@@ -223,6 +223,17 @@ def import_features(cfg, data_list):
 
             # copy keypoints file to raw results folder
             copy(fn_kp, tgt_cur)
+            if os.path.isfile(fn_desc):
+                print(fn_desc)
+                print(tgt_cur)
+                copy(fn_desc, tgt_cur)
+            if os.path.isfile(fn_score):
+                copy(fn_score, tgt_cur)
+            if os.path.isfile(fn_scale):
+                copy(fn_scale, tgt_cur)
+            if os.path.isfile(fn_ori):
+                copy(fn_ori, tgt_cur)
+
             # create match folder with match method name
             match_folder_path = os.path.join(tgt_cur,cfg.match_name)
             if not os.path.isdir(match_folder_path):
