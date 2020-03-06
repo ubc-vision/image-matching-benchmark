@@ -58,7 +58,7 @@ def get_cluster_name():
         return 'beluga'
     elif hostname.startswith('nia'):
         return 'niagara'
-    elif hostname.startswith('vps') or hostname.startswith('imw-benchmark'):
+    elif hostname.startswith('vps') or hostname.startswith('benchmark'):
         return 'gcp'
     elif hostname.startswith('n'):
         return 'rci'
