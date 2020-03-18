@@ -14,12 +14,20 @@ For more information, please refer to the following:
 * [Data download link](https://vision.uvic.ca/imw-challenge/index.md)
   * Parsing the training data: see example on `example/training_data/parse_data.ipynb`.
 * [Baselines repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines)
-* [Setting up a scalable Slurm cluster on GCP](https://github.com/etrulls/slurm-gcp)
-   * Work in progress, may not exist yet.
+* [Instructions to set up a scalable Slurm cluster on GCP](https://github.com/etrulls/slurm-gcp)
 
 ## Citation
 
-We are in the process of writing a paper about the benchmark and the state of the art in local feature extraction and matching, which will be available soon. For now, if you use it, please cite the [website](https://vision.uvic.ca/image-matching-challenge).
+If you use this benchmark, please cite the following paper:
+
+```
+@article{Jin2020,
+    author={Yuhe Jin and Dmytro Mishkin and Anastasiia Mishchuk and Jiri Matas and Pascal Fua and Kwang Moo Yi and Eduard Trulls},
+    title={{Image Matching across Wide Baselines: From Paper to Practice}},
+    journal={arXiv},
+    year={2020}
+}
+```
 
 ## Motivation
 
@@ -36,6 +44,7 @@ The core assumption behind this benchmark is that we can then subsample these su
 Ground truth data and benchmark should be placed on the same folder, e.g.:
 
 ```
+
 $ ls ~
 data
 image-matching-benchmark
