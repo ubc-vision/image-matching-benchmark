@@ -43,6 +43,12 @@ def main(cfg):
     print('Adding processing date: {}'.format(
         master_dict['properties']['processing_date']))
 
+    # Add date
+    master_dict['properties'] = OrderedDict()
+    master_dict['properties'][
+        'is_submission'] = cfg.is_submission
+    print('Flagging as user submission: {}'.format(cfg.is_submission))
+
     # Add descriptor properties
     cfg_desc = deepcopy(cfg_orig)
     cfg_desc.dataset = 'phototourism'

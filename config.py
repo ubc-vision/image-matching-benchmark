@@ -244,6 +244,10 @@ arg.add_argument('--is_challenge',
                  type=str2bool,
                  default=False,
                  help='Enable for challenge entries (more strict settings)')
+arg.add_argument('--is_submission',
+                 type=str2bool,
+                 default=False,
+                 help='Flag as user submission (not from organizers)')
 
 # Arguments that are automatically set by benchmark
 # These arguments should not be manually adjusted. Use at your own risk!
