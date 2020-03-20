@@ -43,8 +43,7 @@ def main(cfg):
     print('Adding processing date: {}'.format(
         master_dict['properties']['processing_date']))
 
-    # Add date
-    master_dict['properties'] = OrderedDict()
+    # Add submission flag
     master_dict['properties'][
         'is_submission'] = cfg.is_submission
     print('Flagging as user submission: {}'.format(cfg.is_submission))
