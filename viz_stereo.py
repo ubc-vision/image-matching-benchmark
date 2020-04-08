@@ -117,6 +117,9 @@ def main(cfg):
         kp2 = keypoints_dict[fn2]
         kp1_int = np.round(kp1).astype(int)
         kp2_int = np.round(kp2).astype(int)
+
+        kp1_int[:, 1] = np.clip(kp1_int[:, 1],0,depth[fn1].shape[0]-1) 
+        kp1_int[:, 0] = np.clip(kp1_int[:, 0],0,depth[fn1].shape[1]-1) 
         d1 = np.expand_dims(depth[fn1][kp1_int[:, 1], kp1_int[:, 0]], axis=-1)
         d2 = np.expand_dims(depth[fn2][kp2_int[:, 1], kp2_int[:, 0]], axis=-1)
 
