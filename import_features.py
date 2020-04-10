@@ -63,7 +63,7 @@ def get_descriptor_nbytes(cfg, data_list):
 def validate_label(label):
     if '_' in label:
         print('WARNING: Replacing underscore with hyphen in method name')
-    return label.replace('_', '-')
+    return label.replace('_', '-').lower()
 
 
 def import_features(cfg, data_list):
@@ -100,7 +100,7 @@ def import_features(cfg, data_list):
         numkp = cfg.num_keypoints
         print('Pre-selected number of keypoints: {}'.format(numkp))
 
-    # only check descriptor size if it is provided    
+    # only check descriptor size if it is provided
     if os.path.isfile(os.path.join(cfg.path_features, data_list[0], 'descriptors.h5')):
         # Open a descriptors file to get their size
         print('Retrieving descriptor_size...')
@@ -140,7 +140,7 @@ def import_features(cfg, data_list):
             '_'.join([cfg.kp_name, str(numkp), cfg.desc_name]))
         if not os.path.isdir(tgt_cur):
             os.makedirs(tgt_cur)
-            
+
         # Both keypoints and descriptors files are provided
         if os.path.isfile(fn_kp) and os.path.isfile(fn_desc) and not \
            (os.path.isfile(fn_match) or (
@@ -219,7 +219,7 @@ def import_features(cfg, data_list):
             if numkp < max(size_kp_file):
                 raise RuntimeError('------ number of keypoints exceeds maximum allowed limit'
                                    '(wanted: {}, found: {})'.format(
-                                       numkp, max(size_kp_file)))   
+                                       numkp, max(size_kp_file)))
 
             # copy keypoints file to raw results folder
             copy(fn_kp, tgt_cur)
@@ -260,7 +260,7 @@ def import_features(cfg, data_list):
             # make dummy cost file
             with h5py.File(os.path.join(filter_folder_path,'matches_inlier_cost.h5'),'w') as h5_w:
                 h5_w.create_dataset('cost', data=0.0)
-            
+
             # check if three stereo matches are provided
             if all([os.path.isfile(fn_stereo_match_list[idx]) for idx in range(3)]):
                 print('------ Three stereo match files are provided')
@@ -319,19 +319,22 @@ if __name__ == '__main__':
                         action='store_true',
                         default=False,
                         help='reverse the image name position in match keys')
-    parser.add_argument('--kp_name',
-                        type=str,
-                        default='',
-                        help='Name of the method used to extract keypoints')
-    parser.add_argument('--desc_name',
-                        type=str,
-                        default='',
-                        help='Name of the method used to extract descriptors')
+    parser.add_argument(
+        '--kp_name',
+        type=str,
+        default='',
+        help='Name of the method used to extract keypoints, lower case only')
+    parser.add_argument(
+        '--desc_name',
+        type=str,
+        default='',
+        help='Name of the method used to extract descriptors, lower case only')
     parser.add_argument(
         '--match_name',
         type=str,
         default='',
-        help='Name of the method used to match features, if any')
+        help='Name of the method used to match features, if any, '
+        'lower case only')
     parser.add_argument(
         '--num_keypoints',
         type=int,
