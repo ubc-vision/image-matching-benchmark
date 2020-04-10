@@ -241,10 +241,10 @@ def import_features(cfg, data_list):
             # copy match file to raw results folder
 
             if os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0]):
-                print('------ Multiview match file and Stereo match file are provieded seperately')
+                print('------ Multiview match file and Stereo match file are provided seperately')
                 fn_match = fn_multiview_match
             else:
-                print('------ Only one match file is provided for both stereo and multiveiw tasks')
+                print('------ Only one match file is provided for both stereo and multiview tasks')
 
             copy(fn_match,os.path.join(match_folder_path,'matches.h5'))
             # make dummy cost file
@@ -315,10 +315,11 @@ def import_features(cfg, data_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--matches_key_reverse',
-                        action='store_true',
-                        default=False,
-                        help='reverse the image name position in match keys')
+    parser.add_argument(
+        '--matches_key_reverse',
+        action='store_true',
+        default=False,
+        help='reverse the image name position in match keys')
     parser.add_argument(
         '--kp_name',
         type=str,
@@ -340,13 +341,15 @@ if __name__ == '__main__':
         type=int,
         default=-1,
         help='Number of keypoints (-1 to use all)')
-    parser.add_argument('--path_features',
-                        type=str,
-                        help='Path to the features to import')
-    parser.add_argument('--path_results',
-                        type=str,
-                        default='../benchmark-results/phototourism/',
-                        help='Directory holding benchmark results.')
+    parser.add_argument(
+        '--path_features',
+        type=str,
+        help='Path to the features to import')
+    parser.add_argument(
+        '--path_results',
+        type=str,
+        default='../benchmark-results/phototourism/',
+        help='Directory holding benchmark results.')
     parser.add_argument(
         '--subset',
         type=str,
