@@ -118,8 +118,11 @@ def load_h5(filename):
     '''Loads dictionary from hdf5 file'''
 
     dict_to_load = {}
-    with h5py.File(filename, 'r') as f:
-        keys = [key for key in f.keys()]
-        for key in keys:
-            dict_to_load[key] = f[key].value
+    try:
+        with h5py.File(filename, 'r') as f:
+            keys = [key for key in f.keys()]
+            for key in keys:
+                dict_to_load[key] = f[key].value
+    except:
+        print('Cannot find file {}'.format(filename))
     return dict_to_load
