@@ -181,8 +181,8 @@ def main(cfg):
 
         # Plot matches on points without depth
         for idx in range(len(zero_index)):
-            plt.plot((kp1[idx, 0] + h_offset[0], kp2[idx, 0] + h_offset[1]),
-                     (kp1[idx, 1] + v_offset[0], kp2[idx, 1] + v_offset[1]),
+            plt.plot((kp1_inl[idx, 0] + h_offset[0], kp2_inl[idx, 0] + h_offset[1]),
+                     (kp1_inl[idx, 1] + v_offset[0], kp2_inl[idx, 1] + v_offset[1]),
                      color='b',
                      linewidth=linewidth)
 
