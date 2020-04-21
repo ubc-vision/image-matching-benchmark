@@ -21,12 +21,12 @@ import random
 from time import time
 
 from config import get_config, print_usage
-from utils.io_helper import load_h5, build_composite_image
+from utils.io_helper import load_h5, build_composite_image, load_json
 from utils.path_helper import (get_data_path, get_kp_file, get_match_file,
                                get_stereo_epipolar_final_match_file,
                                get_stereo_viz_folder, get_geom_file,
                                get_geom_inl_file)
-from utils.load_helper import load_depth, load_calib
+from utils.load_helper import load_depth, load_calib, load_h5_valid_image
 from utils.stereo_helper import (np_skew_symmetric, get_projected_kp,
                                  normalize_keypoints, unnormalize_keypoints,
                                  get_truesym)
@@ -59,12 +59,20 @@ def main(cfg):
     print(' -- Visualizations, stereo: "{}/{}"'.format(cfg.dataset, cfg.scene))
     t_start = time()
 
+    # load deprecated images list
+    deprecated_images_list = load_json(cfg.json_deprecated_images)
+    if cfg.scene in deprecated_images_list.keys():
+        deprecated_images = deprecated_images_list[cfg.scene]
+        # print(' -- -- {} hsa deprecated images: {}'.format(cfg.scene, ' '.join(deprecated_images)))
+    else:
+        deprecated_images = []
+
     # Load keypoints, matches and errors
-    keypoints_dict = load_h5(get_kp_file(cfg))
-    matches_dict = load_h5(get_match_file(cfg))
+    keypoints_dict = load_h5_valid_image(get_kp_file(cfg),deprecated_images)
+    matches_dict = load_h5_valid_image(get_match_file(cfg),deprecated_images)
 
     # Hacky: We need to recompute the errors, loading only for the keys
-    errors_dict = load_h5(get_stereo_epipolar_final_match_file(cfg, th='0.1'))
+    errors_dict = load_h5_valid_image(get_stereo_epipolar_final_match_file(cfg, th='0.1'),deprecated_images)
 
     # Get data directory
     data_dir = get_data_path(cfg)
@@ -109,7 +117,7 @@ def main(cfg):
         calc1 = calib_dict[fn1]
         calc2 = calib_dict[fn2]
         matches = matches_dict[pair]
-        ransac_inl_dict = load_h5(get_geom_inl_file(cfg))
+        ransac_inl_dict = load_h5_valid_image(get_geom_inl_file(cfg),deprecated_images)
         inl = ransac_inl_dict[pair]
 
         # Get depth for keypoints

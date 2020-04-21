@@ -23,11 +23,12 @@ from time import time
 
 from config import get_config, print_usage
 from utils.io_helper import load_h5, load_json
-from utils.load_helper import load_image
+from utils.load_helper import load_image, load_h5_valid_image
 from utils.path_helper import (get_kp_file, get_colmap_output_path,
                                get_colmap_viz_folder)
 from utils.colmap_helper import (get_best_colmap_index,
-                                 get_colmap_image_path_list)
+                                 get_colmap_image_path_list,
+                                 valid_bag)
 from third_party.colmap.scripts.python.read_write_model import (
         read_images_binary, read_points3d_binary)
 
@@ -46,6 +47,14 @@ def main(cfg):
         getattr(cfg, 'splits_{}_{}'.format(cfg.dataset, cfg.subset)))
     bag_size_list = [b['bag_size'] for b in bag_size_json]
     bag_size_num = [b['num_in_bag'] for b in bag_size_json]
+
+    # load deprecated images list
+    deprecated_images_list = load_json(cfg.json_deprecated_images)
+    if cfg.scene in deprecated_images_list.keys():
+        deprecated_images = deprecated_images_list[cfg.scene]
+        print('{} hsa deprecated images: {}'.format(cfg.scene, ' '.join(deprecated_images)))
+    else:
+        deprecated_images = []
 
     # # Do not re-run if files already exist -- off for now
     # skip = True
@@ -100,7 +109,17 @@ def main(cfg):
         cfg_bag.bag_size = _bag_size
         num_bags = getattr(
             cfg_bag, 'num_viz_colmap_subsets_bagsize{}'.format(_bag_size))
-        for _bag_id in range(num_bags):
+        
+        # select valid bag
+        valid_bag_ids = []
+        bag_id = 0 
+        while max(len(valid_bag_ids), bag_id)< num_bags:
+            cfg_bag.bag_id = bag_id
+            if valid_bag(cfg_bag, deprecated_images):
+                valid_bag_ids.append(bag_id)
+            bag_id = bag_id +1 
+        # print('valid {}bag: {}'.format(_bag_size, ' '.join(str(x) for x in valid_bag_ids)))
+        for _bag_id in valid_bag_ids:
             print(
                 ' -- Visualizations, multiview: "{}/{}", bag_size={}, bag {}/{}'
                 .format(cfg.dataset, cfg.scene, _bag_size, _bag_id + 1,
