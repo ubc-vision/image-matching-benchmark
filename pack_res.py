@@ -74,12 +74,6 @@ def main(cfg):
     # Read data and splits
     for dataset in ['phototourism']:
 
-        # get deprecated images
-        if dataset in deprecated_images_list.keys():
-            deprecated_images = deprecated_images_list[dataset]
-        else:
-            deprecated_images = []
-
         setattr(cfg_orig, 'scenes_{}_{}'.format(dataset, cfg_orig.subset),
                 './json/data/{}_{}.json'.format(dataset, cfg_orig.subset))
         setattr(cfg_orig, 'splits_{}_{}'.format(dataset, cfg_orig.subset),
@@ -126,6 +120,13 @@ def main(cfg):
             cfg.dataset = dataset
             cfg.task = 'stereo'
             for scene in scene_list:
+
+                # get deprecated images
+                if scene in deprecated_images_list.keys():
+                    deprecated_images = deprecated_images_list[scene]
+                else:
+                    deprecated_images = []
+
                 cfg.scene = scene
 
                 res_dict[scene]['stereo']['run_avg'] = OrderedDict()
