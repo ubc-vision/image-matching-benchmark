@@ -116,7 +116,9 @@ def main(cfg):
             if valid_bag(cfg_bag, deprecated_images):
                 valid_bag_ids.append(bag_id)
             bag_id = bag_id + 1
-        # print('valid {}bag: {}'.format(_bag_size, ' '.join(str(x) for x in valid_bag_ids)))
+        # print('valid {}bag: {}'.format(
+        #     _bag_size, ' '.join(str(x) for x in valid_bag_ids)))
+
         for _bag_id in valid_bag_ids:
             print(
                 ' -- Visualizations, multiview: "{}/{}", bag_size={}, bag {}/{}'

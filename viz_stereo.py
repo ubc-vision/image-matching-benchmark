@@ -59,7 +59,7 @@ def main(cfg):
     print(' -- Visualizations, stereo: "{}/{}"'.format(cfg.dataset, cfg.scene))
     t_start = time()
 
-    # load deprecated images list
+    # Load deprecated images list
     deprecated_images_list = load_json(cfg.json_deprecated_images)
     if cfg.scene in deprecated_images_list.keys():
         deprecated_images = deprecated_images_list[cfg.scene]
