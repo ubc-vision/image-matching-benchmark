@@ -102,7 +102,7 @@ def main(cfg):
     keypoints_dict = load_h5(get_kp_file(cfg))
 
     # Loop over bag sizes
-    for _bag_size in bag_size_list:
+    for _bag_num, _bag_size in zip(bag_size_num, bag_size_list):
         cfg_bag = deepcopy(cfg)
         cfg_bag.bag_size = _bag_size
         num_bags = getattr(
@@ -111,13 +111,13 @@ def main(cfg):
         # select valid bag
         valid_bag_ids = []
         bag_id = 0
-        while max(len(valid_bag_ids), bag_id) < num_bags:
+        while len(valid_bag_ids) < num_bags:
             cfg_bag.bag_id = bag_id
             if valid_bag(cfg_bag, deprecated_images):
                 valid_bag_ids.append(bag_id)
             bag_id = bag_id + 1
-        # print('valid {}bag: {}'.format(
-        #     _bag_size, ' '.join(str(x) for x in valid_bag_ids)))
+            if bag_id == _bag_num:
+                raise RuntimeError('Ran out of bags to check out')
 
         for _bag_id in valid_bag_ids:
             print(
