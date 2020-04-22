@@ -106,10 +106,6 @@ arg.add_argument('--path_pack',
                  type=str,
                  default='',
                  help='Directory holding benchmark results.')
-arg.add_argument('--json_deprecated_images',
-                 type=str,
-                 default="default",
-                 help="json file containing deprecated images")
 
 arg.add_argument(
     '--vis_th',
@@ -274,6 +270,10 @@ for dataset in ['phototourism']:
                          type=str,
                          default='',
                          help='')
+arg.add_argument('--json_deprecated_images',
+                 type=str,
+                 default="",
+                 help="JSON file containing deprecated images")
 
 
 def validate_method(method, is_challenge):
@@ -612,6 +612,7 @@ def get_config():
 
     # Overwrite deprecated images json path
     cfg.json_deprecated_images = 'json/deprecated_images.json'
+
     # Enforce challenge settings
     if cfg.is_challenge:
         if cfg.num_runs_test_stereo != 3 or \
