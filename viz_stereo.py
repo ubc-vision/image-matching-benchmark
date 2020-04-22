@@ -63,16 +63,16 @@ def main(cfg):
     deprecated_images_list = load_json(cfg.json_deprecated_images)
     if cfg.scene in deprecated_images_list.keys():
         deprecated_images = deprecated_images_list[cfg.scene]
-        # print(' -- -- {} hsa deprecated images: {}'.format(cfg.scene, ' '.join(deprecated_images)))
     else:
         deprecated_images = []
 
     # Load keypoints, matches and errors
-    keypoints_dict = load_h5_valid_image(get_kp_file(cfg),deprecated_images)
-    matches_dict = load_h5_valid_image(get_match_file(cfg),deprecated_images)
+    keypoints_dict = load_h5_valid_image(get_kp_file(cfg), deprecated_images)
+    matches_dict = load_h5_valid_image(get_match_file(cfg), deprecated_images)
 
     # Hacky: We need to recompute the errors, loading only for the keys
-    errors_dict = load_h5_valid_image(get_stereo_epipolar_final_match_file(cfg, th='0.1'),deprecated_images)
+    errors_dict = load_h5_valid_image(
+        get_stereo_epipolar_final_match_file(cfg, th='0.1'), deprecated_images)
 
     # Get data directory
     data_dir = get_data_path(cfg)
@@ -117,7 +117,8 @@ def main(cfg):
         calc1 = calib_dict[fn1]
         calc2 = calib_dict[fn2]
         matches = matches_dict[pair]
-        ransac_inl_dict = load_h5_valid_image(get_geom_inl_file(cfg),deprecated_images)
+        ransac_inl_dict = load_h5_valid_image(get_geom_inl_file(cfg),
+                                              deprecated_images)
         inl = ransac_inl_dict[pair]
 
         # Get depth for keypoints
@@ -126,10 +127,10 @@ def main(cfg):
         kp1_int = np.round(kp1).astype(int)
         kp2_int = np.round(kp2).astype(int)
 
-        kp1_int[:, 1] = np.clip(kp1_int[:, 1],0,depth[fn1].shape[0]-1) 
-        kp1_int[:, 0] = np.clip(kp1_int[:, 0],0,depth[fn1].shape[1]-1) 
-        kp2_int[:, 1] = np.clip(kp2_int[:, 1],0,depth[fn2].shape[0]-1)
-        kp2_int[:, 0] = np.clip(kp2_int[:, 0],0,depth[fn2].shape[1]-1)
+        kp1_int[:, 1] = np.clip(kp1_int[:, 1], 0, depth[fn1].shape[0] - 1)
+        kp1_int[:, 0] = np.clip(kp1_int[:, 0], 0, depth[fn1].shape[1] - 1)
+        kp2_int[:, 1] = np.clip(kp2_int[:, 1], 0, depth[fn2].shape[0] - 1)
+        kp2_int[:, 0] = np.clip(kp2_int[:, 0], 0, depth[fn2].shape[1] - 1)
         d1 = np.expand_dims(depth[fn1][kp1_int[:, 1], kp1_int[:, 0]], axis=-1)
         d2 = np.expand_dims(depth[fn2][kp2_int[:, 1], kp2_int[:, 0]], axis=-1)
 
@@ -191,10 +192,11 @@ def main(cfg):
 
         # Plot matches on points without depth
         for idx in range(len(zero_index)):
-            plt.plot((kp1_inl[idx, 0] + h_offset[0], kp2_inl[idx, 0] + h_offset[1]),
-                     (kp1_inl[idx, 1] + v_offset[0], kp2_inl[idx, 1] + v_offset[1]),
-                     color='b',
-                     linewidth=linewidth)
+            plt.plot(
+                (kp1_inl[idx, 0] + h_offset[0], kp2_inl[idx, 0] + h_offset[1]),
+                (kp1_inl[idx, 1] + v_offset[0], kp2_inl[idx, 1] + v_offset[1]),
+                color='b',
+                linewidth=linewidth)
 
         # Plot matches on points with depth
         max_dist = 5
