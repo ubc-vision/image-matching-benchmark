@@ -188,6 +188,13 @@ def main(cfg):
             cfg.task = 'multiview'
             for scene in scene_list:
                 cfg.scene = scene
+                
+                # get deprecated images
+                if scene in deprecated_images_list.keys():
+                    deprecated_images = deprecated_images_list[scene]
+                else:
+                    deprecated_images = []
+
                 for run in ['run_avg'
                             ] + ['run_{}'.format(f) for f in range(num_runs)]:
                     res_dict[scene]['multiview'][run] = OrderedDict()
