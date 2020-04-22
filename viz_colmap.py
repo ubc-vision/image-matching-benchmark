@@ -188,7 +188,7 @@ def main(cfg):
                 plt.savefig(viz_file_hq, bbox_inches='tight')
 
                 # Convert with imagemagick
-                os.system('convert -quality 75 -resize \"400>\" {} {}'.format(
+                os.system('convert -quality 75 -resize \"640>\" {} {}'.format(
                     viz_file_hq, viz_file_lq))
 
                 plt.close()
