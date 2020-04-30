@@ -93,31 +93,37 @@ def match(desc1, desc2, cfg, kps1=None, kps2=None):
 
     # Matching
     num_nn = method_match['num_nn']
-    if WITH_FAISS and dist == cv2.NORM_L2:
-        #print ("FAISS")
-        dbsize, dim = desc2.shape
-        res = faiss.StandardGpuResources()  # use a single GPU
-        index_flat = faiss.IndexFlatL2(dim)  # build a flat (CPU) index
-        nn = faiss.index_cpu_to_gpu(res, 0, index_flat)
-        nn.add(desc2)         # add vectors to the index
-        if 'fginn' in filter_type:
-            k = 10 + num_nn
+    try:
+        if WITH_FAISS and dist == cv2.NORM_L2:
+            #print ("FAISS")
+            dbsize, dim = desc2.shape
+            res = faiss.StandardGpuResources()  # use a single GPU
+            index_flat = faiss.IndexFlatL2(dim)  # build a flat (CPU) index
+            nn = faiss.index_cpu_to_gpu(res, 0, index_flat)
+            nn.add(desc2)         # add vectors to the index
+            if 'fginn' in filter_type:
+                k = 10 + num_nn
+            else:
+                k=max(2, num_nn + 1)
+            dists,idx = nn.search(desc1, k)
+            matches = []
+            #print (dists.shape)
+            for query_idx, (dd, ii) in enumerate(zip(dists, idx)):
+                cur_match = []
+                for db_idx, m_dist in zip(ii,dd):
+                    cur_match.append(cv2.DMatch(query_idx, db_idx, m_dist))
+                matches.append(cur_match)
         else:
-            k=max(2, num_nn + 1)
-        dists,idx = nn.search(desc1, k)
-        matches = []
-        #print (dists.shape)
-        for query_idx, (dd, ii) in enumerate(zip(dists, idx)):
-            cur_match = []
-            for db_idx, m_dist in zip(ii,dd):
-                cur_match.append(cv2.DMatch(query_idx, db_idx, m_dist))
-            matches.append(cur_match)
-    else:
+            if 'fginn' in filter_type:
+                matches = bf.knnMatch(desc1, desc2, k=10 + num_nn)
+            else:
+                matches = bf.knnMatch(desc1, desc2, k=max(2, num_nn + 1))
+    except:
+        print ("FAISS crashed, fallback to opnecv")
         if 'fginn' in filter_type:
             matches = bf.knnMatch(desc1, desc2, k=10 + num_nn)
         else:
             matches = bf.knnMatch(desc1, desc2, k=max(2, num_nn + 1))
-
     # Apply filtering (ratio test or something else)
     valid_matches = []
 
