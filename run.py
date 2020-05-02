@@ -49,7 +49,7 @@ def create_eval_jobs(dep_list, mode, cfg, job_dict):
         return [job]
 
 
-def eval_viz_stereo(dep_list, cfg):
+def eval_viz_stereo(dep_list, cfg, debug=False):
     # Do this one for one run
     if cfg.run > 0:
         return
@@ -60,8 +60,12 @@ def eval_viz_stereo(dep_list, cfg):
         dep_str = ','.join(dep_list)
 
     # The checks on existing files run inside, as there are many of them
-    print(' -- Generating stereo visualizations')
-    cmd_list = [create_sh_cmd('viz_stereo.py', cfg)]
+    if debug:
+        print(' -- Generating stereo visualizations (debug)')
+        cmd_list = [create_sh_cmd('viz_stereo_debug.py', cfg)]
+    else:
+        print(' -- Generating stereo visualizations')
+        cmd_list = [create_sh_cmd('viz_stereo.py', cfg)]
     create_and_queue_jobs(cmd_list, cfg, dep_str)
 
 
@@ -227,6 +231,10 @@ def main(cfg):
                         # Visualization for stereo
                         if task == 'stereo' and cfg.run_viz:
                             eval_viz_stereo(stereo_jobs, cfg)
+
+                        # Debugging for stereo
+                        if task == 'stereo' and cfg.run_viz_debug:
+                            eval_viz_stereo(stereo_jobs, cfg, debug=True)
 
                         # Multiview
                         if task == 'multiview' and cfg.eval_multiview:

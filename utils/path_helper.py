@@ -508,6 +508,26 @@ def get_colmap_viz_folder(cfg):
            os.path.join(cfg.path_visualization, 'jpg', base)
 
 
+def get_stereo_viz_folder_debug(cfg):
+    '''Returns the path to the stereo visualizations folder.'''
+
+    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
+                        cfg.dataset, cfg.scene, 'stereo')
+
+    return os.path.join(cfg.path_visualization + '-debug', 'png', base), \
+           os.path.join(cfg.path_visualization + '-debug', 'jpg', base)
+
+
+def get_colmap_viz_folder_debug(cfg):
+    '''Returns the path to the multiview visualizations folder.'''
+
+    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
+                        cfg.dataset, cfg.scene, 'multiview')
+
+    return os.path.join(cfg.path_visualization, 'png', base), \
+           os.path.join(cfg.path_visualization, 'jpg', base)
+
+
 def get_pairs_per_threshold(data_dir):
     pairs = {}
     for th in np.arange(0, 1, 0.1):
