@@ -56,7 +56,7 @@ def compute_per_img_file(img_path, cfg):
     ]:
         if desc in [
                 u + v + w for u in ['sift', 'rootsift']
-                for v in ['', '-clahe'] for w in ['', '-upright']
+                for v in ['', '-clahe'] for w in ['', '-upright', '-upright--']
         ]:
             return lfeat.sift.run(img_path, cfg)
 
