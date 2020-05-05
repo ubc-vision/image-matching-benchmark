@@ -133,7 +133,12 @@ def eval_essential_matrix(p1n, p2n, E, dR, dt):
 
     if E.size > 0:
         _, R, t, _ = cv2.recoverPose(E, p1n, p2n)
-        err_q, err_t = evaluate_R_t(dR, dt, R, t)
+        try:
+            err_q, err_t = evaluate_R_t(dR, dt, R, t)
+        except:
+            err_q = np.pi
+            err_t = np.pi / 2
+
     else:
         err_q = np.pi
         err_t = np.pi / 2
