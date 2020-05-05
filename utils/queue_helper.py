@@ -319,7 +319,7 @@ def estimate_runtime(cfg_list):
     # are measured on Niagara. This could be slower on Cedar, Graham, and
     # Beluga
     hostname = get_cluster_name()
-
+    multiplier = 2
     # Estimate runtime on slurm
     if hostname == 'niagara':
         # 1.5 is still too strict

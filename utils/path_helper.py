@@ -27,6 +27,8 @@ def get_eval_path(mode, cfg):
         return get_geom_path(cfg)
     elif mode == 'stereo':
         return get_stereo_path(cfg)
+    elif mode == 'multiview':
+        return get_multiview_path(cfg)
     else:
         raise ValueError('Unknown job type')
 
@@ -406,13 +408,17 @@ def get_stereo_depth_projection_final_match_file(cfg, th=None):
 
 
 def get_colmap_path(cfg):
-    '''Returns the path to colmap results.'''
+    '''Returns the path to colmap results for individual bag.'''
 
-    return os.path.join(get_filter_path(cfg),
-                        'multiview-fold-{}'.format(cfg.run),
+    return os.path.join(get_multiview_path(cfg),
                         'bag_size_{}'.format(cfg.bag_size),
                         'bag_id_{:05d}'.format(cfg.bag_id))
 
+def get_multiview_path(cfg):
+    '''Returns the path to multiview folder.'''
+
+    return os.path.join(get_filter_path(cfg),
+                        'multiview-fold-{}'.format(cfg.run))
 
 def get_colmap_mark_file(cfg):
     '''Returns the path to colmap flag.'''
@@ -499,6 +505,26 @@ def get_stereo_viz_folder(cfg):
 
 
 def get_colmap_viz_folder(cfg):
+    '''Returns the path to the multiview visualizations folder.'''
+
+    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
+                        cfg.dataset, cfg.scene, 'multiview')
+
+    return os.path.join(cfg.path_visualization, 'png', base), \
+           os.path.join(cfg.path_visualization, 'jpg', base)
+
+
+def get_stereo_viz_folder_debug(cfg):
+    '''Returns the path to the stereo visualizations folder.'''
+
+    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
+                        cfg.dataset, cfg.scene, 'stereo')
+
+    return os.path.join(cfg.path_visualization + '-debug', 'png', base), \
+           os.path.join(cfg.path_visualization + '-debug', 'jpg', base)
+
+
+def get_colmap_viz_folder_debug(cfg):
     '''Returns the path to the multiview visualizations folder.'''
 
     base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),

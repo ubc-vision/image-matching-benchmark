@@ -107,3 +107,13 @@ def load_calib(calib_fullpath_list, subset_index=None):
                 os.path.basename(_calib_file))[0].replace('calibration_', '')
             calib[img_name] = load_h5(_calib_file)
     return calib
+
+def load_h5_valid_image(path, deprecated_images):
+    return remove_keys(load_h5(path),deprecated_images)
+
+def remove_keys(d, key_list):
+    for key in key_list:
+        del_key_list = [tmp_key for tmp_key in d.keys() if key in tmp_key]
+        for del_key in del_key_list:
+            del d[del_key]
+    return d

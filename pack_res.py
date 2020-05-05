@@ -68,8 +68,12 @@ def main(cfg):
         master_dict['properties']['descriptor_type'],
         master_dict['properties']['descriptor_nbytes']))
 
+    # get deprecated image list
+    deprecated_images_list = load_json(cfg.json_deprecated_images)
+
     # Read data and splits
     for dataset in ['phototourism']:
+
         setattr(cfg_orig, 'scenes_{}_{}'.format(dataset, cfg_orig.subset),
                 './json/data/{}_{}.json'.format(dataset, cfg_orig.subset))
         setattr(cfg_orig, 'splits_{}_{}'.format(dataset, cfg_orig.subset),
@@ -116,6 +120,13 @@ def main(cfg):
             cfg.dataset = dataset
             cfg.task = 'stereo'
             for scene in scene_list:
+
+                # get deprecated images
+                if scene in deprecated_images_list.keys():
+                    deprecated_images = deprecated_images_list[scene]
+                else:
+                    deprecated_images = []
+
                 cfg.scene = scene
 
                 res_dict[scene]['stereo']['run_avg'] = OrderedDict()
@@ -140,7 +151,7 @@ def main(cfg):
                     for metric in metric_list:
                         t_cur = time()
                         getattr(pack_helper, 'compute_' + metric)(cur_dict,
-                                                                  cfg)
+                                                                  deprecated_images, cfg)
                         print(
                             ' -- Packing "{}"/"{}"/stereo, run: {}/{}, metric: {} [{:.02f} s]'
                             .format(dataset, scene, run + 1, num_runs, metric,
@@ -177,6 +188,13 @@ def main(cfg):
             cfg.task = 'multiview'
             for scene in scene_list:
                 cfg.scene = scene
+                
+                # get deprecated images
+                if scene in deprecated_images_list.keys():
+                    deprecated_images = deprecated_images_list[scene]
+                else:
+                    deprecated_images = []
+
                 for run in ['run_avg'
                             ] + ['run_{}'.format(f) for f in range(num_runs)]:
                     res_dict[scene]['multiview'][run] = OrderedDict()
@@ -202,7 +220,7 @@ def main(cfg):
                             t_cur = time()
                             getattr(pack_helper, 'compute_' + metric)(
                                 cur_dict['run_{}'.format(run)]['{}bag'.format(
-                                    bag_size)], cfg)
+                                    bag_size)], deprecated_images, cfg)
                             print(
                                 ' -- Packing "{}"/"{}"/multiview, run {}/{}, "{}", metric: {} [{:.02f} s]'
                                 .format(dataset, scene, run + 1, num_runs,

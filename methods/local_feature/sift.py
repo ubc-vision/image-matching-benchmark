@@ -61,34 +61,62 @@ def run(img_path, cfg):
         use_rootsift = False
         use_clahe_desc = False
         use_upright = False
+        use_upright_minus_minus = False
     elif desc_name == 'rootsift':
         use_rootsift = True
         use_clahe_desc = False
         use_upright = False
+        use_upright_minus_minus = False
     elif desc_name == 'sift-clahe':
         use_rootsift = False
         use_clahe_desc = True
         use_upright = False
+        use_upright_minus_minus = False
     elif desc_name == 'rootsift-clahe':
         use_rootsift = True
         use_clahe_desc = True
         use_upright = False
+        use_upright_minus_minus = False
     elif desc_name == 'sift-upright':
         use_rootsift = False
         use_clahe_desc = False
         use_upright = True
+        use_upright_minus_minus = False
+    elif desc_name == 'sift-upright--':
+        use_rootsift = False
+        use_clahe_desc = False
+        use_upright = True
+        use_upright_minus_minus = True
     elif desc_name == 'rootsift-upright':
         use_rootsift = True
         use_clahe_desc = False
         use_upright = True
+        use_upright_minus_minus = False
+    elif desc_name == 'rootsift-upright--':
+        use_rootsift = True
+        use_clahe_desc = False
+        use_upright = True
+        use_upright_minus_minus = True
     elif desc_name == 'sift-clahe-upright':
         use_rootsift = False
         use_clahe_desc = True
         use_upright = True
+        use_upright_minus_minus = False
+    elif desc_name == 'sift-clahe-upright--':
+        use_rootsift = False
+        use_clahe_desc = True
+        use_upright = True
+        use_upright_minus_minus = True
     elif desc_name == 'rootsift-clahe-upright':
         use_rootsift = True
         use_clahe_desc = True
         use_upright = True
+        use_upright_minus_minus = False
+    elif desc_name == 'rootsift-clahe-upright--':
+        use_rootsift = True
+        use_clahe_desc = True
+        use_upright = True
+        use_upright_minus_minus = True
     else:
         raise ValueError('Unknown descriptor')
 
@@ -100,11 +128,15 @@ def run(img_path, cfg):
     #         ' use_upright={}'.format(use_upright))
 
     # Initialize feature extractor
+    NUM_FIRST_DETECT = 100000000
+    if use_upright_minus_minus:
+        NUM_FIRST_DETECT = num_kp
     if use_lower_det_th:
-        feature = cv2.xfeatures2d.SIFT_create(contrastThreshold=-10000,
+        feature = cv2.xfeatures2d.SIFT_create(NUM_FIRST_DETECT, 
+                                              contrastThreshold=-10000,
                                               edgeThreshold=-10000)
     else:
-        feature = cv2.xfeatures2d.SIFT_create()
+        feature = cv2.xfeatures2d.SIFT_create(NUM_FIRST_DETECT)
 
     # Load image, for detection
     if use_clahe_det:

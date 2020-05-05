@@ -56,7 +56,7 @@ def compute_per_img_file(img_path, cfg):
     ]:
         if desc in [
                 u + v + w for u in ['sift', 'rootsift']
-                for v in ['', '-clahe'] for w in ['', '-upright']
+                for v in ['', '-clahe'] for w in ['', '-upright', '-upright--']
         ]:
             return lfeat.sift.run(img_path, cfg)
 
@@ -71,6 +71,10 @@ def compute_per_img_file(img_path, cfg):
     # AKAZE
     if kp in ['akaze-def', 'akaze-lowth'] and desc == 'akaze':
         return lfeat.akaze.run(img_path, cfg)
+
+    # FREAK
+    if kp in ['freak-def', 'freak-lowth'] and desc == 'freak':
+        return lfeat.freak.run(img_path, cfg)
 
     # Preserving this for now
     if kp == 'sift8k' and desc == 'affnethardnetextract':
