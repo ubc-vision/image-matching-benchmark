@@ -101,7 +101,7 @@ def main(cfg):
                                  [1]], geom_dict[pair], matches_dict[pair],
         filter_matches_dict[pair], geom_inl_dict[pair], cfg)
                                         for pair in tqdm(pairs_per_th['0.0']))
-
+    
     # Convert previous visibility list to strings
     old_keys = []
     for pair in pairs:
