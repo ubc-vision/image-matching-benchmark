@@ -482,26 +482,27 @@ def validate_method(method, is_challenge):
                         .format(dataset, task))
 
                 # Check for redundant settings with custom matches
-                cur_config = method['config_{}_stereo'.format(dataset)]
-                if cur_config['use_custom_matches']:
-                    if 'matcher' in cur_config or 'outlier_filter' in cur_config \
-                            or 'geom' in cur_config:
-                        raise ValueError(
-                            '[{}/stereo] Found redundant settings with use_custom_matches=True'
-                            .format(dataset))
-                else:
-                    if 'matcher' not in cur_config or 'outlier_filter' not in \
-                            cur_config or 'geom' not in cur_config:
-                        raise ValueError(
-                            '[{}/stereo] Missing required settings with use_custom_matches=False'
-                            .format(dataset))
+                if 'config_{}_stereo'.format(dataset) in method:
+                    cur_config = method['config_{}_stereo'.format(dataset)]
+                    if cur_config['use_custom_matches']:
+                        if 'matcher' in cur_config or 'outlier_filter' in cur_config \
+                                or 'geom' in cur_config:
+                            raise ValueError(
+                                '[{}/stereo] Found redundant settings with use_custom_matches=True'
+                                .format(dataset))
+                    else:
+                        if 'matcher' not in cur_config or 'outlier_filter' not in \
+                                cur_config or 'geom' not in cur_config:
+                            raise ValueError(
+                                '[{}/stereo] Missing required settings with use_custom_matches=False'
+                                .format(dataset))
 
-                if cur_config['use_custom_matches']:
-                    if 'matcher' in cur_config or 'outlier_filter' in cur_config \
-                            or 'geom' in cur_config:
-                        raise ValueError(
-                            '[{}/stereo] Found redundant settings with use_custom_matches=True'
-                        )
+                    if cur_config['use_custom_matches']:
+                        if 'matcher' in cur_config or 'outlier_filter' in cur_config \
+                                or 'geom' in cur_config:
+                            raise ValueError(
+                                '[{}/stereo] Found redundant settings with use_custom_matches=True'
+                            )
 
             # For stereo, check also geom
             if task == 'stereo' and \
