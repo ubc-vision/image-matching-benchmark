@@ -26,7 +26,12 @@ from utils.path_helper import (get_data_path, get_desc_file, get_kp_file,
                                get_match_file, get_match_path,
                                get_match_cost_file, get_pairs_per_threshold)
 import cv2
-
+WITH_FAISS=False
+try:
+    import faiss
+    WITH_FAISS = True
+except:
+    pass
 
 def compute_matches(descs1, descs2, cfg, kps1=None, kps2=None):
     '''Computes matches given descriptors.
@@ -88,7 +93,8 @@ def main(cfg):
     print('Computing matches')
     num_cores = cfg.num_opencv_threads if cfg.num_opencv_threads > 0 else int(
         len(os.sched_getaffinity(0)) * 0.9)
-
+    if WITH_FAISS:
+        num_cores = min(4, num_cores)
     result = Parallel(n_jobs=num_cores)(
         delayed(compute_matches)(np.asarray(descriptors_dict[pair.split(
             '-')[0]]), np.asarray(descriptors_dict[pair.split(
