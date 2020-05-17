@@ -88,7 +88,7 @@ For stereo, we provide wrappers around OpenCV RANSAC, which is far from the stat
 
 For DEGENSAC:
 ```
-pip install git+https://github.com/ducha-aiki/pyransac
+pip install pydegensac
 ```
 
 For MAGSAC:

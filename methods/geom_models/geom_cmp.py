@@ -17,7 +17,7 @@ import numpy as np
 import math
 
 try:
-    import pyransac
+    import pydegensac as pyransac
 except Exception:
     print('WARNING: Could not import pyransac')
     pass
