@@ -134,6 +134,27 @@ def import_features(cfg, data_list):
         fn_stereo_match_list = [os.path.join(cfg.path_features, _data,'matches_stereo_{}.h5').
             format(idx) for idx in range(3)]
 
+        # reverse image pair key order
+        if cfg.matches_key_reverse:
+            match_list = [fn_match, fn_multiview_match] + fn_stereo_match_list
+            for _match in match_list:
+                if os.path.isfile(_match):
+                    print('------ Reversing key')
+                    with h5py.File(_match[:-3]+'_rev.h5', 'w') as h5_w:
+                        with h5py.File(_match, 'r') as h5_r:
+                            keys = [key for key in h5_r.keys()]
+                            for key in keys:
+                                split_key = key.split('-')
+                                new_key = split_key[1] + '-' + split_key[0]
+                                h5_w[new_key] = h5_r[key].value
+                                h5_w[new_key][1, :] = h5_r[key].value[0, :]
+                                h5_w[new_key][0, :] = h5_r[key].value[1, :]
+            fn_match = os.path.join(cfg.path_features, _data, 'matches_rev.h5')
+            fn_multiview_match = os.path.join(cfg.path_features, _data, 'matches_multiview_rev.h5')
+            fn_stereo_match_list = [os.path.join(cfg.path_features, _data,'matches_stereo_{}_rev.h5').
+                format(idx) for idx in range(3)]
+
+
         # create keypoints folder
         tgt_cur = os.path.join(
             cfg.path_results, _data,
@@ -286,40 +307,6 @@ def import_features(cfg, data_list):
                     os.path.join(stereo_filter_folder_path,'matches_imported_stereo_{}.h5'.format(idx)))
         else:
             raise RuntimeError('Neither descriptors nor matches are provided!')
-
-
-        # Preserved for debugging custom matches
-
-        # if os.path.isfile(fn_match):
-        #     print('------ Importing matches')
-
-        #     if not cfg.match_name:
-        #         raise RuntimeError('Must define match_name')
-
-        #     tgt_cur = os.path.join(
-        #         cfg.path_results,
-        #         _data, '_'.join([cfg.kp_name,
-        #                          str(numkp), cfg.desc_name]), cfg.match_name)
-
-        #     if not os.path.isdir(tgt_cur):
-        #         os.makedirs(tgt_cur)
-        #     if cfg.matches_key_reverse:
-        #         print('------ Reversing key')
-        #         with h5py.File(fn_match, 'w') as h5_w:
-        #             with h5py.File(
-        #                     os.path.join(cfg.path_features, _data,
-        #                                  'matches.h5'), 'r') as h5_r:
-        #                 keys = [key for key in h5_r.keys()]
-        #                 for key in keys:
-        #                     split_key = key.split('-')
-        #                     new_key = split_key[1] + '-' + split_key[0]
-        #                     h5_w[new_key] = h5_r[key].value
-        #                     h5_w[new_key][1, :] = h5_r[key].value[0, :]
-        #                     h5_w[new_key][0, :] = h5_r[key].value[1, :]
-        #     else:
-        #         copy(fn_match, tgt_cur)
-        # else:
-        #     print('------ No custom match file!')
 
 
 if __name__ == '__main__':
