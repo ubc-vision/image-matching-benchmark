@@ -122,8 +122,8 @@ def main(cfg):
         inl = ransac_inl_dict[pair]
 
         # Get depth for keypoints
-        kp1 = keypoints_dict[fn1]
-        kp2 = keypoints_dict[fn2]
+        kp1 = keypoints_dict[fn1][:,:2]
+        kp2 = keypoints_dict[fn2][:,:2]
         kp1_int = np.round(kp1).astype(int)
         kp2_int = np.round(kp2).astype(int)
 
