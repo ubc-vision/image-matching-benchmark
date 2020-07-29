@@ -309,6 +309,10 @@ def validate_method(method, is_challenge):
             str,
             Optional('link_to_pdf'):
             str,
+            Optional('under_review'):
+            bool,
+            Optional('under_review_override'):
+            str,
         },
         'config_common': {
             'json_label': str,
