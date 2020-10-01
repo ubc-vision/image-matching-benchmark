@@ -1,6 +1,6 @@
 # Image Matching Benchmark
 
-This is the code release for the Image Matching benchmark, which is the basis of a [challenge](https://vision.uvic.ca/image-matching-challenge) on wide-baseline image matching co-located with the CVPR 2020 workshop on [Image Matching: Local Features and Beyond](https://image-matching-workshop.github.io/). Its goal is to allow researchers to evaluate methods for local feature extraction and matching, using downstream metrics such as the accuracy of the final poses, on a standardized benchmark, against and alongside state-of-the-art methods for every stage of the traditional image matching pipeline.
+This is the code release for the Image Matching benchmark, which is the basis of a [challenge](https://image-matching-challenge.github.io/) on wide-baseline image matching co-located with the CVPR 2020 workshop on [Image Matching: Local Features and Beyond](https://image-matching-workshop.github.io/). Its goal is to allow researchers to evaluate methods for local feature extraction and matching, using downstream metrics such as the accuracy of the final poses, on a standardized benchmark, against and alongside state-of-the-art methods for every stage of the traditional image matching pipeline.
 
 Running the benchmark requires writing a configuration file and, typically, providing pre-computed features (and matches). We provide a validation set with three sequences. Challenge submissions will be sent to the organizers and processed on a private test set, for which we provide images, but not the ground truth. This release aims to help with the following:
 * Centralize feature extraction and matching methods in a modular framework.
@@ -9,11 +9,11 @@ Running the benchmark requires writing a configuration file and, typically, prov
 
 For more information, please refer to the following:
 
-* [Challenge and leaderboards](https://vision.uvic.ca/image-matching-challenge)
+* [Challenge and leaderboards](https://image-matching-challenge.github.io/)
    * [Terms and conditions](https://vision.uvic.ca/image-matching-challenge/submit/index.html#tac)
-* [Data download link](https://vision.uvic.ca/imw-challenge/index.md)
+* [Data download link](https://www.cs.ubc.ca/~kmyi/imw2020/data.html)
   * Parsing the training data: see example on `example/training_data/parse_data.ipynb`.
-* [Baselines repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines)
+* [Baselines repository](https://github.com/ubc-vision/image-matching-benchmark-baselines)
 * [Instructions to set up a scalable Slurm cluster on GCP](https://github.com/etrulls/slurm-gcp)
 
 ## Citation
@@ -112,7 +112,7 @@ Metadata and hyperparameters are specified via configuration files written in th
   "metadata": {
       "publish_anonymously_until_challenge": false,
       "authors": "Challenge organizers",
-      "contact_email": "imagematching@csc.uvic.ca",
+      "contact_email": "image-matching@googlegroups.com",
       "method_name": "SIFT (OpenCV)",
       "method_description": "Just a test!",
       "link_to_website": "https://www.opencv.org",
@@ -223,7 +223,7 @@ You can see more examples in the [evaluation server](https://vision.uvic.ca/imag
 
 ## Importing your own features/matches
 
-Local features from OpenCV (e.g. SIFT or ORB) can be computed directly from the benchmark: please refer to `methods/local_feature` for documentation about their options. Other methods should extract features separately and import them via HDF5 files. We provide a simple example, for illustration, [here](https://vision.uvic.ca/image-matching-challenge/submit/), and wrappers over several methods on a [separate repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines): feel free to add your own. You can then import them into the benchmark with the `import_features.py` script:
+Local features from OpenCV (e.g. SIFT or ORB) can be computed directly from the benchmark: please refer to `methods/local_feature` for documentation about their options. Other methods should extract features separately and import them via HDF5 files. We provide a simple example, for illustration, [here](https://vision.uvic.ca/image-matching-challenge/submit/), and wrappers over several methods on a [separate repository](https://github.com/ubc-vision/image-matching-benchmark-baselines): feel free to add your own. You can then import them into the benchmark with the `import_features.py` script:
 
 ```bash
 python import_features.py --path_features=<path_to_folder> --kp_name=<kp_name> --desc_name=<desc_name> --num_keypoints=2048
