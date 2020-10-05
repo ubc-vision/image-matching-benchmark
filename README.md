@@ -10,7 +10,7 @@ Running the benchmark requires writing a configuration file and, typically, prov
 For more information, please refer to the following:
 
 * [Challenge and leaderboards](https://image-matching-challenge.github.io/)
-   * [Terms and conditions](https://vision.uvic.ca/image-matching-challenge/submit/index.html#tac)
+   * [Terms and conditions](https://www.cs.ubc.ca/research/image-matching-challenge/submit/index.html#tac)
 * [Data download link](https://www.cs.ubc.ca/~kmyi/imw2020/data.html)
   * Parsing the training data: see example on `example/training_data/parse_data.ipynb`.
 * [Baselines repository](https://github.com/ubc-vision/image-matching-benchmark-baselines)
@@ -219,11 +219,11 @@ Finally, this configuration file should be written as a list, which you can use 
 ]
 ```
 
-You can see more examples in the [evaluation server](https://vision.uvic.ca/image-matching-challenge/leaderboard/), which stores the raw configuration files.
+You can see more examples in the [evaluation server](https://www.cs.ubc.ca/research/image-matching-challenge/leaderboard/), which stores the raw configuration files.
 
 ## Importing your own features/matches
 
-Local features from OpenCV (e.g. SIFT or ORB) can be computed directly from the benchmark: please refer to `methods/local_feature` for documentation about their options. Other methods should extract features separately and import them via HDF5 files. We provide a simple example, for illustration, [here](https://vision.uvic.ca/image-matching-challenge/submit/), and wrappers over several methods on a [separate repository](https://github.com/ubc-vision/image-matching-benchmark-baselines): feel free to add your own. You can then import them into the benchmark with the `import_features.py` script:
+Local features from OpenCV (e.g. SIFT or ORB) can be computed directly from the benchmark: please refer to `methods/local_feature` for documentation about their options. Other methods should extract features separately and import them via HDF5 files. We provide a simple example, for illustration, [here](https://www.cs.ubc.ca/research/image-matching-challenge/submit/), and wrappers over several methods on a [separate repository](https://github.com/ubc-vision/image-matching-benchmark-baselines): feel free to add your own. You can then import them into the benchmark with the `import_features.py` script:
 
 ```bash
 python import_features.py --path_features=<path_to_folder> --kp_name=<kp_name> --desc_name=<desc_name> --num_keypoints=2048
@@ -266,7 +266,7 @@ python import_features.py --path_features=<path_to_folder> --kp_name=<kp_name> -
 
 ## Terms and conditions
 
-Challenge submissions have additional restrictions in place, such as for instance in the maximum number of iterations in the RANSAC loop, or banning robust estimators which assume known intrinsics and estimate the Essential matrix instead of the Fundamental matrix (which are implemented in the benchmark for the sake of completeness). Please refer to the [submission page](https://vision.uvic.ca/image-matching-challenge/submit/) on the website for further details.
+Challenge submissions have additional restrictions in place, such as for instance in the maximum number of iterations in the RANSAC loop, or banning robust estimators which assume known intrinsics and estimate the Essential matrix instead of the Fundamental matrix (which are implemented in the benchmark for the sake of completeness). Please refer to the [submission page](https://www.cs.ubc.ca/research/image-matching-challenge/submit/) on the website for further details.
 
 ## Usage
 
@@ -351,7 +351,7 @@ We are currently working on the following features:
 
 * Support for relative poses (stereo only), to allow direct (relative) pose regression.
 
-We are also working on integrating new datasets and tasks. These may not be available before the 2020 challenge deadline, but the organizers reserve the rights to change the terms of the challenge before the deadline. Please refer to the [website](https://vision.uvic.ca/image-matching-challenge/submit/) for terms and conditions.
+We are also working on integrating new datasets and tasks. These may not be available before the 2020 challenge deadline, but the organizers reserve the rights to change the terms of the challenge before the deadline. Please refer to the [website](https://www.cs.ubc.ca/research/image-matching-challenge/submit/) for terms and conditions.
 
 ## Disclaimer
 
