@@ -24,7 +24,7 @@ If you use this benchmark, please cite the following paper:
 @article{Jin2020,
     author={Yuhe Jin and Dmytro Mishkin and Anastasiia Mishchuk and Jiri Matas and Pascal Fua and Kwang Moo Yi and Eduard Trulls},
     title={{Image Matching across Wide Baselines: From Paper to Practice}},
-    journal={arXiv},
+    journal={International Journal of Computer Vision},
     year={2020}
 }
 ```
