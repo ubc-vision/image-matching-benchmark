@@ -73,12 +73,6 @@ def main(cfg):
 
     # Read data and splits
     for dataset in ['phototourism']:
-
-        setattr(cfg_orig, 'scenes_{}_{}'.format(dataset, cfg_orig.subset),
-                './json/data/{}_{}.json'.format(dataset, cfg_orig.subset))
-        setattr(cfg_orig, 'splits_{}_{}'.format(dataset, cfg_orig.subset),
-                './json/bag_size/{}_{}.json'.format(dataset, cfg_orig.subset))
-
         # Create empty dictionary
         master_dict[dataset] = OrderedDict()
         res_dict = OrderedDict()
