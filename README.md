@@ -1,6 +1,6 @@
 # Image Matching Benchmark
 
-This is the code release for the Image Matching benchmark, which is the basis of a [challenge](https://vision.uvic.ca/image-matching-challenge) on wide-baseline image matching co-located with the CVPR 2020 workshop on [Image Matching: Local Features and Beyond](https://image-matching-workshop.github.io/). Its goal is to allow researchers to evaluate methods for local feature extraction and matching, using downstream metrics such as the accuracy of the final poses, on a standardized benchmark, against and alongside state-of-the-art methods for every stage of the traditional image matching pipeline.
+This is the code release for the Image Matching benchmark, which is the basis of a [challenge](https://image-matching-challenge.github.io/) on wide-baseline image matching co-located with the CVPR 2020 workshop on [Image Matching: Local Features and Beyond](https://image-matching-workshop.github.io/). Its goal is to allow researchers to evaluate methods for local feature extraction and matching, using downstream metrics such as the accuracy of the final poses, on a standardized benchmark, against and alongside state-of-the-art methods for every stage of the traditional image matching pipeline.
 
 Running the benchmark requires writing a configuration file and, typically, providing pre-computed features (and matches). We provide a validation set with three sequences. Challenge submissions will be sent to the organizers and processed on a private test set, for which we provide images, but not the ground truth. This release aims to help with the following:
 * Centralize feature extraction and matching methods in a modular framework.
@@ -9,11 +9,11 @@ Running the benchmark requires writing a configuration file and, typically, prov
 
 For more information, please refer to the following:
 
-* [Challenge and leaderboards](https://vision.uvic.ca/image-matching-challenge)
-   * [Terms and conditions](https://vision.uvic.ca/image-matching-challenge/submit/index.html#tac)
-* [Data download link](https://vision.uvic.ca/imw-challenge/index.md)
+* [Challenge and leaderboards](https://image-matching-challenge.github.io/)
+   * [Terms and conditions](https://www.cs.ubc.ca/research/image-matching-challenge/submit/index.html#tac)
+* [Data download link](https://www.cs.ubc.ca/~kmyi/imw2020/data.html)
   * Parsing the training data: see example on `example/training_data/parse_data.ipynb`.
-* [Baselines repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines)
+* [Baselines repository](https://github.com/ubc-vision/image-matching-benchmark-baselines)
 * [Instructions to set up a scalable Slurm cluster on GCP](https://github.com/etrulls/slurm-gcp)
 
 ## Citation
@@ -24,7 +24,7 @@ If you use this benchmark, please cite the following paper:
 @article{Jin2020,
     author={Yuhe Jin and Dmytro Mishkin and Anastasiia Mishchuk and Jiri Matas and Pascal Fua and Kwang Moo Yi and Eduard Trulls},
     title={{Image Matching across Wide Baselines: From Paper to Practice}},
-    journal={arXiv},
+    journal={International Journal of Computer Vision},
     year={2020}
 }
 ```
@@ -112,7 +112,7 @@ Metadata and hyperparameters are specified via configuration files written in th
   "metadata": {
       "publish_anonymously_until_challenge": false,
       "authors": "Challenge organizers",
-      "contact_email": "imagematching@csc.uvic.ca",
+      "contact_email": "image-matching@googlegroups.com",
       "method_name": "SIFT (OpenCV)",
       "method_description": "Just a test!",
       "link_to_website": "https://www.opencv.org",
@@ -219,11 +219,11 @@ Finally, this configuration file should be written as a list, which you can use 
 ]
 ```
 
-You can see more examples in the [evaluation server](https://vision.uvic.ca/image-matching-challenge/leaderboard/), which stores the raw configuration files.
+You can see more examples in the [evaluation server](https://www.cs.ubc.ca/research/image-matching-challenge/leaderboard/), which stores the raw configuration files.
 
 ## Importing your own features/matches
 
-Local features from OpenCV (e.g. SIFT or ORB) can be computed directly from the benchmark: please refer to `methods/local_feature` for documentation about their options. Other methods should extract features separately and import them via HDF5 files. We provide a simple example, for illustration, [here](https://vision.uvic.ca/image-matching-challenge/submit/), and wrappers over several methods on a [separate repository](https://github.com/vcg-uvic/image-matching-benchmark-baselines): feel free to add your own. You can then import them into the benchmark with the `import_features.py` script:
+Local features from OpenCV (e.g. SIFT or ORB) can be computed directly from the benchmark: please refer to `methods/local_feature` for documentation about their options. Other methods should extract features separately and import them via HDF5 files. We provide a simple example, for illustration, [here](https://www.cs.ubc.ca/research/image-matching-challenge/submit/), and wrappers over several methods on a [separate repository](https://github.com/ubc-vision/image-matching-benchmark-baselines): feel free to add your own. You can then import them into the benchmark with the `import_features.py` script:
 
 ```bash
 python import_features.py --path_features=<path_to_folder> --kp_name=<kp_name> --desc_name=<desc_name> --num_keypoints=2048
@@ -266,7 +266,7 @@ python import_features.py --path_features=<path_to_folder> --kp_name=<kp_name> -
 
 ## Terms and conditions
 
-Challenge submissions have additional restrictions in place, such as for instance in the maximum number of iterations in the RANSAC loop, or banning robust estimators which assume known intrinsics and estimate the Essential matrix instead of the Fundamental matrix (which are implemented in the benchmark for the sake of completeness). Please refer to the [submission page](https://vision.uvic.ca/image-matching-challenge/submit/) on the website for further details.
+Challenge submissions have additional restrictions in place, such as for instance in the maximum number of iterations in the RANSAC loop, or banning robust estimators which assume known intrinsics and estimate the Essential matrix instead of the Fundamental matrix (which are implemented in the benchmark for the sake of completeness). Please refer to the [submission page](https://www.cs.ubc.ca/research/image-matching-challenge/submit/) on the website for further details.
 
 ## Usage
 
@@ -351,7 +351,7 @@ We are currently working on the following features:
 
 * Support for relative poses (stereo only), to allow direct (relative) pose regression.
 
-We are also working on integrating new datasets and tasks. These may not be available before the 2020 challenge deadline, but the organizers reserve the rights to change the terms of the challenge before the deadline. Please refer to the [website](https://vision.uvic.ca/image-matching-challenge/submit/) for terms and conditions.
+We are also working on integrating new datasets and tasks. These may not be available before the 2020 challenge deadline, but the organizers reserve the rights to change the terms of the challenge before the deadline. Please refer to the [website](https://www.cs.ubc.ca/research/image-matching-challenge/submit/) for terms and conditions.
 
 ## Disclaimer
 
