@@ -628,7 +628,8 @@ def get_config():
         cfg.path_pack = 'packed-debug'
 
     # Overwrite deprecated images json path -- unless already overwritten
-    if not hasattr(cfg, 'json_deprecated_images'):
+    # TODO: This is a bit fragile -- fix it next time around
+    if not cfg.json_deprecated_images:
         cfg.json_deprecated_images = 'json/deprecated_images.json'
 
     # Enforce challenge settings
