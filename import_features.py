@@ -91,8 +91,12 @@ def import_features(cfg, data_list):
                                                      np.max(size_kp_file),
                                                      np.mean(size_kp_file)))
 
+    # Set number of kp to a large number for pairwise matching
+    if cfg.pairwise_matching:
+        numkp = 1000000
+        print('Pairwise matching mode, no limit on kp')
     # If no category is selected, determine it automatically
-    if cfg.num_keypoints == -1:
+    elif cfg.num_keypoints == -1:
         numkp = get_kp_category(np.max(size_kp_file))
         print('Setting number of keypoints category to: {}'.format(numkp))
     # Otherwise, hand-pick it
@@ -135,9 +139,14 @@ def import_features(cfg, data_list):
             format(idx) for idx in range(3)]
 
         # create keypoints folder
-        tgt_cur = os.path.join(
-            cfg.path_results, _data,
-            '_'.join([cfg.kp_name, str(numkp), cfg.desc_name]))
+        if cfg.pairwise_matching:
+            tgt_cur = os.path.join(
+                cfg.path_results, _data,
+                '_'.join([cfg.kp_name, str(-1), cfg.desc_name]))
+        else:
+            tgt_cur = os.path.join(
+                cfg.path_results, _data,
+                '_'.join([cfg.kp_name, str(numkp), cfg.desc_name]))
         if not os.path.isdir(tgt_cur):
             os.makedirs(tgt_cur)
 
@@ -342,6 +351,11 @@ if __name__ == '__main__':
         default=-1,
         help='Number of keypoints (-1 to use all)')
     parser.add_argument(
+        '--pairwise_matching',
+        default=False, 
+        action='store_true',
+        help='Enable for pairwise matching methods')
+    parser.add_argument(
         '--path_features',
         type=str,
         help='Path to the features to import')
@@ -363,7 +377,7 @@ if __name__ == '__main__':
 
     if not cfg.kp_name:
         raise RuntimeError('Must define kp_name')
-    if not cfg.desc_name:
+    if not cfg.desc_name and not cfg.pairwise_matching:
         raise RuntimeError('Must define desc_name')
     if cfg.match_name and cfg.num_keypoints != -1:
         raise RuntimeError('Can not crop keypoints list with a custom matcher')

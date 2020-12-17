@@ -318,7 +318,7 @@ def validate_method(method, is_challenge):
             'json_label': str,
             'keypoint': And(Use(str), lambda v: '_' not in v),
             'descriptor': And(Use(str), lambda v: '_' not in v),
-            'num_keypoints': And(int, lambda v: v > 1),
+            'num_keypoints': And(int, lambda v: v > 1 or v == -1),
         },
         Optional('config_phototourism_stereo'): {
             Optional('use_custom_matches'): bool,
