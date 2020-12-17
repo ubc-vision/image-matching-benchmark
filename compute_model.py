@@ -129,7 +129,7 @@ def main(cfg):
     # Get data directory
     try:
         desc_dict = defaultdict(list)
-        desc_dict = load_h5(get_desc_file(cfg))
+        desc_dict1 = load_h5(get_desc_file(cfg))
         for k, v in desc_dict.items():
             desc_dict[k] = v
     except Exception:
