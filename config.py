@@ -416,7 +416,7 @@ def validate_method(method, is_challenge, datasets):
             'keypoint': And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
             'descriptor': And(Use(str),
                               lambda v: re.match("^[a-z0-9-.]*$", v)),
-            'num_keypoints': And(int, lambda v: v > 1),
+            'num_keypoints': And(int, lambda v: v > 1 or v == -1),
         },
         **possible_ds,
     })
@@ -522,11 +522,11 @@ def validate_method(method, is_challenge, datasets):
                         raise ValueError(
                             '[{}/stereo] custom match submission can only use cv2-8pt'
                             .format(dataset1)
-                        )                       
+                        )
 
                 # Threshold for RANSAC
                 if geom['method'].lower() in [
-                        'cv2-ransac-f', 'cv2-ransac-e', 
+                        'cv2-ransac-f', 'cv2-ransac-e',
                     'cv2-usacdef-f',
                     'cv2-usacmagsac-f',
                     'cv2-usacfast-f',

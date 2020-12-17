@@ -279,14 +279,18 @@ def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
 
     # Calculate repeatability
     # Thresholds are hardcoded
-    rep_s_list_1 = get_repeatability(
-        kp1_p[np.intersect1d(kp1_p_valid_idx, d1_nonzero_idx)], kp2,
-        cfg.matching_score_and_repeatability_px_threshold)
-    rep_s_list_2 = get_repeatability(
-        kp2_p[np.intersect1d(kp2_p_valid_idx, d2_nonzero_idx)], kp1,
-        cfg.matching_score_and_repeatability_px_threshold)
-    rep_s_list = [(rep_s_1 + rep_s_2) / 2
-                  for rep_s_1, rep_s_2 in zip(rep_s_list_1, rep_s_list_2)]
+    # Disable it for pairwise matching
+    if cfg.method_dict['config_common']['num_keypoints'] == -1:
+        rep_s_list = []
+    else:
+        rep_s_list_1 = get_repeatability(
+            kp1_p[np.intersect1d(kp1_p_valid_idx, d1_nonzero_idx)], kp2,
+            cfg.matching_score_and_repeatability_px_threshold)
+        rep_s_list_2 = get_repeatability(
+            kp2_p[np.intersect1d(kp2_p_valid_idx, d2_nonzero_idx)], kp1,
+            cfg.matching_score_and_repeatability_px_threshold)
+        rep_s_list = [(rep_s_1 + rep_s_2) / 2
+                      for rep_s_1, rep_s_2 in zip(rep_s_list_1, rep_s_list_2)]
 
     # Evaluate matching score after initial matching
     geod_d_list = []
