@@ -233,12 +233,21 @@ def compute_repeatability(res_dict, deprecated_images, cfg):
             get_repeatability_score_file(cfg, th), deprecated_images)
 
         for key, values in repeatability_dict.items():
+<<<<<<< HEAD
             # Simply return average of all pairs
             for idx in range(len(px_th_list)):
                 try:
                     ms_list_list[idx] += [values[idx]]
                 except:
                     print("Warning")
+=======
+            if len(values) == 0:
+                continue
+            else:
+                # Simply return average of all pairs
+                for idx in range(len(px_th_list)):
+                    ms_list_list[idx] += [values[idx]]
+>>>>>>> 2e9fa62 (fix bug for packing empty repeatability list)
 
         # Now compute average number of keypoints
         acc = []
