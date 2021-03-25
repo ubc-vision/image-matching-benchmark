@@ -270,7 +270,7 @@ arg.add_argument('--run', type=str, default='', help='')
 arg.add_argument('--bag_size', type=int, default=-1, help='')
 arg.add_argument('--bag_id', type=int, default=-1, help='')
 arg.add_argument('--task', type=str, default='', help='')
-for dataset in ['phototourism']:
+for dataset in ['phototourism', 'cr']:
     for subset in ['val', 'test']:
         arg.add_argument('--scenes_{}_{}'.format(dataset, subset),
                          type=str,
@@ -286,7 +286,7 @@ arg.add_argument('--json_deprecated_images',
                  help="JSON file containing deprecated images")
 
 
-def validate_method(method, is_challenge):
+def validate_method(method, is_challenge, dataset='phototourism'):
     '''Validate method configuration passed as a JSON file.'''
 
     # Define a dictionary schema
@@ -320,7 +320,7 @@ def validate_method(method, is_challenge):
             'descriptor': And(Use(str), lambda v: '_' not in v),
             'num_keypoints': And(int, lambda v: v > 1),
         },
-        Optional('config_phototourism_stereo'): {
+        Optional(f'config_{dataset}_stereo'): {
             Optional('use_custom_matches'): bool,
             Optional('custom_matches_name'): str,
             Optional('matcher'): {
@@ -385,7 +385,7 @@ def validate_method(method, is_challenge):
                 bool,
             }
         },
-        Optional('config_phototourism_multiview'): {
+        Optional(f'config_{dataset}_multiview'): {
             Optional('use_custom_matches'): bool,
             Optional('custom_matches_name'): str,
             Optional('matcher'): {
@@ -425,7 +425,7 @@ def validate_method(method, is_challenge):
             },
             Optional('colmap'): {},
         },
-        Optional('config_phototourism_relocalization'): {},
+        Optional(f'config_{dataset}_relocalization'): {},
     })
 
     schema.validate(method)
@@ -435,24 +435,24 @@ def validate_method(method, is_challenge):
         raise ValueError('Must specify metadata')
 
     # Check what we are running
-    do_pt_stereo = False if 'config_phototourism_stereo' not in method \
-            else bool(method['config_phototourism_stereo'])
-    do_pt_multiview = False if 'config_phototourism_multiview' not in method \
-            else bool(method['config_phototourism_multiview'])
-    do_pt_relocalization = False if 'config_phototourism_relocalization' not \
-            in method else bool(method['config_phototourism_relocalization'])
+    do_pt_stereo = False if f'config_{dataset}_stereo' not in method \
+            else bool(method[f'config_{dataset}_stereo'])
+    do_pt_multiview = False if f'config_{dataset}_multiview' not in method \
+            else bool(method[f'config_{dataset}_multiview'])
+    do_pt_relocalization = False if f'config_{dataset}_relocalization' not \
+            in method else bool(method[f'config_{dataset}_relocalization'])
 
     if do_pt_stereo:
-        print('Running: Phototourism, stereo track')
+        print(f'Running: {dataset}, stereo track')
     if do_pt_multiview:
-        print('Running: Phototourism, multiview track')
+        print(f'Running: {dataset}, multiview track')
     if do_pt_relocalization:
-        print('Running: Phototourism, relocalization track')
+        print(f'Running: {dataset}, relocalization track')
     if not any([do_pt_stereo, do_pt_multiview, do_pt_relocalization]):
         raise ValueError('No tasks were specified')
 
     # Check for incorrect, missing, or redundant options
-    for dataset in ['phototourism']:
+    for dataset in [dataset]:
         for task in ['stereo', 'multiview', 'relocalization']:
             cur_key = 'config_{}_{}'.format(dataset, task)
             if cur_key not in method:
