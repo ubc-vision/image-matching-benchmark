@@ -72,7 +72,8 @@ def main(cfg):
     deprecated_images_list = load_json(cfg.json_deprecated_images)
 
     # Read data and splits
-    for dataset in ['phototourism']:
+    DATASET_LIST = ['phototourism', 'cr']
+    for dataset in DATASET_LIST:
         # Create empty dictionary
         master_dict[dataset] = OrderedDict()
         res_dict = OrderedDict()

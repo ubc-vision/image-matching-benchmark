@@ -437,25 +437,27 @@ def validate_method(method, is_challenge, datasets=['phototourism']):
     # Check for metadata for challenge entries
     if is_challenge and not method['metadata']:
         raise ValueError('Must specify metadata')
-
-    # Check what we are running
-    do_pt_stereo = False if f'config_{dataset}_stereo' not in method \
-            else bool(method[f'config_{dataset}_stereo'])
-    do_pt_multiview = False if f'config_{dataset}_multiview' not in method \
-            else bool(method[f'config_{dataset}_multiview'])
-    do_pt_relocalization = False if f'config_{dataset}_relocalization' not \
-            in method else bool(method[f'config_{dataset}_relocalization'])
-
-    if do_pt_stereo:
-        print(f'Running: {dataset}, stereo track')
-    if do_pt_multiview:
-        print(f'Running: {dataset}, multiview track')
-    if do_pt_relocalization:
-        print(f'Running: {dataset}, relocalization track')
-    if not any([do_pt_stereo, do_pt_multiview, do_pt_relocalization]):
-        raise ValueError('No tasks were specified')
+    do_pt_stereo = False 
+    do_pt_multiview = False
+    do_pt_relocalization = False
 
     # Check for incorrect, missing, or redundant options
+    for dataset1 in datasets:
+        # Check what we are running
+        try:
+            do_pt_stereo = do_pt_stereo or bool(method[f'config_{dataset1}_stereo'])
+            do_pt_multiview = do_pt_multiview or  bool(method[f'config_{dataset1}_multiview'])
+            do_pt_relocalization = do_pt_relocalization or bool(method[f'config_{dataset1}_relocalization'])
+        except:
+            continue
+        if do_pt_stereo:
+            print(f'Running: {dataset1}, stereo track')
+        if do_pt_multiview:
+            print(f'Running: {dataset1}, multiview track')
+        if do_pt_relocalization:
+            print(f'Running: {dataset1}, relocalization track')
+    if not any([do_pt_stereo, do_pt_multiview, do_pt_relocalization]):
+        raise ValueError('No tasks were specified')
     for dataset1 in datasets:
         for task in ['stereo', 'multiview', 'relocalization']:
             cur_key = 'config_{}_{}'.format(dataset1, task)
@@ -516,7 +518,7 @@ def validate_method(method, is_challenge, datasets=['phototourism']):
             if task == 'stereo' and \
                     'config_{}_stereo'.format(dataset1) in method and \
                     'geom' in method['config_{}_stereo'.format(dataset1)]:
-                geom = method['config_{}_stereo'.format(dataset)]['geom']
+                geom = method['config_{}_stereo'.format(dataset1)]['geom']
 
                 # Threshold for RANSAC
                 if geom['method'].lower() in [
