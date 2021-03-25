@@ -286,41 +286,9 @@ arg.add_argument('--json_deprecated_images',
                  help="JSON file containing deprecated images")
 
 
-def validate_method(method, is_challenge, dataset='phototourism'):
+def validate_method(method, is_challenge, datasets=['phototourism']):
     '''Validate method configuration passed as a JSON file.'''
-
-    # Define a dictionary schema
-    # TODO would be nice to not copy-paste for multiple datasets
-    schema = Schema({
-        Optional('metadata'): {
-            'publish_anonymously':
-            bool,
-            'authors':
-            str,
-            'contact_email':
-            str,
-            'method_name':
-            str,
-            'method_description':
-            str,
-            # 'descriptor_type': str,
-            # 'descriptor_size': And(int, lambda v: v >= 1),
-            Optional('link_to_website'):
-            str,
-            Optional('link_to_pdf'):
-            str,
-            Optional('under_review'):
-            bool,
-            Optional('under_review_override'):
-            str,
-        },
-        'config_common': {
-            'json_label': str,
-            'keypoint': And(Use(str), lambda v: '_' not in v),
-            'descriptor': And(Use(str), lambda v: '_' not in v),
-            'num_keypoints': And(int, lambda v: v > 1),
-        },
-        Optional(f'config_{dataset}_stereo'): {
+    stereo_opts =  {
             Optional('use_custom_matches'): bool,
             Optional('custom_matches_name'): str,
             Optional('matcher'): {
@@ -384,8 +352,8 @@ def validate_method(method, is_challenge, dataset='phototourism'):
                 Optional('degeneracy_check'):
                 bool,
             }
-        },
-        Optional(f'config_{dataset}_multiview'): {
+        }
+    mv_opts =  {
             Optional('use_custom_matches'): bool,
             Optional('custom_matches_name'): str,
             Optional('matcher'): {
@@ -424,10 +392,46 @@ def validate_method(method, is_challenge, dataset='phototourism'):
                 And(Use(str), lambda v: v.lower() in ['none', 'cne-bp-nd']),
             },
             Optional('colmap'): {},
+        }
+    possible_ds = {}
+    for dataset in datasets:
+        possible_ds[Optional(f'config_{dataset}_stereo')] = stereo_opts
+        possible_ds[Optional(f'config_{dataset}_multiview')] = mv_opts
+        possible_ds[Optional(f'config_{dataset}_relocalization')] = {}
+    # Define a dictionary schema
+    # TODO would be nice to not copy-paste for multiple datasets
+    schema = Schema({
+        Optional('metadata'): {
+            'publish_anonymously':
+            bool,
+            'authors':
+            str,
+            'contact_email':
+            str,
+            'method_name':
+            str,
+            'method_description':
+            str,
+            # 'descriptor_type': str,
+            # 'descriptor_size': And(int, lambda v: v >= 1),
+            Optional('link_to_website'):
+            str,
+            Optional('link_to_pdf'):
+            str,
+            Optional('under_review'):
+            bool,
+            Optional('under_review_override'):
+            str,
         },
-        Optional(f'config_{dataset}_relocalization'): {},
+        'config_common': {
+            'json_label': str,
+            'keypoint': And(Use(str), lambda v: '_' not in v),
+            'descriptor': And(Use(str), lambda v: '_' not in v),
+            'num_keypoints': And(int, lambda v: v > 1),
+        }, **possible_ds,
     })
-
+        
+       
     schema.validate(method)
 
     # Check for metadata for challenge entries
@@ -452,9 +456,9 @@ def validate_method(method, is_challenge, dataset='phototourism'):
         raise ValueError('No tasks were specified')
 
     # Check for incorrect, missing, or redundant options
-    for dataset in [dataset]:
+    for dataset1 in datasets:
         for task in ['stereo', 'multiview', 'relocalization']:
-            cur_key = 'config_{}_{}'.format(dataset, task)
+            cur_key = 'config_{}_{}'.format(dataset1, task)
             if cur_key not in method:
                 print('Key "{}" is empty -> skipping check'.format(cur_key))
                 continue
@@ -483,23 +487,23 @@ def validate_method(method, is_challenge, dataset='phototourism'):
                         matcher['symmetric']:
                     raise ValueError(
                         '[{}/{}] Must specify "reduce" if "symmetric" is enabled'
-                        .format(dataset, task))
+                        .format(dataset1, task))
 
                 # Check for redundant settings with custom matches
-                if 'config_{}_stereo'.format(dataset) in method:
-                    cur_config = method['config_{}_stereo'.format(dataset)]
+                if 'config_{}_stereo'.format(dataset1) in method:
+                    cur_config = method['config_{}_stereo'.format(dataset1)]
                     if cur_config['use_custom_matches']:
                         if 'matcher' in cur_config or 'outlier_filter' in cur_config \
                                 or 'geom' in cur_config:
                             raise ValueError(
                                 '[{}/stereo] Found redundant settings with use_custom_matches=True'
-                                .format(dataset))
+                                .format(dataset1))
                     else:
                         if 'matcher' not in cur_config or 'outlier_filter' not in \
                                 cur_config or 'geom' not in cur_config:
                             raise ValueError(
                                 '[{}/stereo] Missing required settings with use_custom_matches=False'
-                                .format(dataset))
+                                .format(dataset1))
 
                     if cur_config['use_custom_matches']:
                         if 'matcher' in cur_config or 'outlier_filter' in cur_config \
@@ -510,8 +514,8 @@ def validate_method(method, is_challenge, dataset='phototourism'):
 
             # For stereo, check also geom
             if task == 'stereo' and \
-                    'config_{}_stereo'.format(dataset) in method and \
-                    'geom' in method['config_{}_stereo'.format(dataset)]:
+                    'config_{}_stereo'.format(dataset1) in method and \
+                    'geom' in method['config_{}_stereo'.format(dataset1)]:
                 geom = method['config_{}_stereo'.format(dataset)]['geom']
 
                 # Threshold for RANSAC
@@ -524,12 +528,12 @@ def validate_method(method, is_challenge, dataset='phototourism'):
                     if 'threshold' not in geom:
                         raise ValueError(
                             '[{}] Must specify a threshold for this method'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'threshold' in geom:
                         raise ValueError(
                             '[{}] Cannot specify a threshold for this method'.
-                            format(dataset))
+                            format(dataset1))
 
                 # Degeneracy check for RANSAC
                 if geom['method'].lower() in [
@@ -538,20 +542,20 @@ def validate_method(method, is_challenge, dataset='phototourism'):
                     if 'degeneracy_check' not in geom:
                         raise ValueError(
                             '[{}] Must indicate degeneracy check for this method'
-                            .format(dataset))
+                            .format(dataset1))
                     if 'error_type' not in geom:
                         raise ValueError(
                             '[{}] Must indicate error type for this method'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'degeneracy_check' in geom:
                         raise ValueError(
                             '[{}] Cannot apply degeneracy check to this method'
-                            .format(dataset))
+                            .format(dataset1))
                     if 'error_type' in geom:
                         raise ValueError(
                             '[{}] Cannot indicate error type for this method'.
-                            format(dataset))
+                            format(dataset1))
 
                 # Confidence for RANSAC/LMEDS
                 if geom['method'].lower() in [
@@ -570,12 +574,12 @@ def validate_method(method, is_challenge, dataset='phototourism'):
                     if 'confidence' not in geom:
                         raise ValueError(
                             '[{}] Must specify a confidence value for OpenCV or DEGENSAC'
-                            .format(dataset))
+                            .format(dataset1))
                 else:
                     if 'confidence' in geom:
                         raise ValueError(
                             '[{}] Cannot specify a confidence value for this method'
-                            .format(dataset))
+                            .format(dataset1))
 
                 # Maximum number of RANSAC iterations
                 if geom['method'].lower() in [
@@ -590,24 +594,24 @@ def validate_method(method, is_challenge, dataset='phototourism'):
                     if 'max_iter' not in geom:
                         raise ValueError(
                             '[{}] Must indicate max_iter for this method'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'max_iter' in geom:
                         raise ValueError(
                             '[{}] Cannot indicate max_iter for this method'.
-                            format(dataset))
+                            format(dataset1))
 
                 # DFE-specific
                 if geom['method'].lower() in ['intel-dfe-f']:
                     if 'postprocess' not in geom:
                         raise ValueError(
                             '[{}] Must specify a postprocess flag for DFE'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'postprocess' in geom:
                         raise ValueError(
                             '[{}] Cannot specify a postprocess flag for this method'
-                            .format(dataset))
+                            .format(dataset1))
 
 
 def get_config():

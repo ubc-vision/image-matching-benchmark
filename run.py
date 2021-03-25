@@ -150,7 +150,7 @@ def eval_multiview(dep_list, cfg, bag_size_list, bag_size_num, job_dict):
 
 def main(cfg):
     ''' Main routine for the benchmark '''
-    DATASET_LIST = ['phototourism']
+    DATASET_LIST = ['phototourism', 'cr']
     # Read data and splits
     for dataset in DATASET_LIST:
         for subset in ['val', 'test']:
@@ -162,10 +162,9 @@ def main(cfg):
     # Read the list of methods and datasets
     method_list = load_json(cfg.json_method)
     for i, method in enumerate(method_list):
-        for dataset in DATASET_LIST:
-            print('Validating method {}/{}: "{}" {}'.format(
-            i + 1, len(method_list), method['config_common']['json_label'], dataset))
-            validate_method(method, is_challenge=cfg.is_challenge, dataset=dataset)
+        print('Validating method {}/{}: "{}"'.format(
+        i + 1, len(method_list), method['config_common']['json_label']))
+        validate_method(method, is_challenge=cfg.is_challenge, datasets=DATASET_LIST)
 
     # Back up original config
     cfg_orig = deepcopy(cfg)
