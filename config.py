@@ -627,8 +627,10 @@ def get_config():
               'packed-debug')
         cfg.path_pack = 'packed-debug'
 
-    # Overwrite deprecated images json path
-    cfg.json_deprecated_images = 'json/deprecated_images.json'
+    # Overwrite deprecated images json path -- unless already overwritten
+    # TODO: This is a bit fragile -- fix it next time around
+    if not cfg.json_deprecated_images:
+        cfg.json_deprecated_images = 'json/deprecated_images.json'
 
     # Enforce challenge settings
     if cfg.is_challenge:
