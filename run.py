@@ -164,7 +164,7 @@ def main(cfg):
     for i, method in enumerate(method_list):
         for dataset in DATASET_LIST:
             print('Validating method {}/{}: "{}" {}'.format(
-            i + 1, len(method_list), method['config_common']['json_label']), dataset)
+            i + 1, len(method_list), method['config_common']['json_label'], dataset))
             validate_method(method, is_challenge=cfg.is_challenge, dataset=dataset)
 
     # Back up original config
