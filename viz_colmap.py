@@ -204,8 +204,9 @@ def main(cfg):
                         colmap_points[k].xyz[2]
                     ])
                 points3d = np.array(points3d)
-                points3d -= np.median(points3d, axis=0)[None, ...]
-                points3d /= np.abs(points3d).max() + 1e-6
+                if len(points3d) > 0:
+                    points3d -= np.median(points3d, axis=0)[None, ...]
+                    points3d /= np.abs(points3d).max() + 1e-6
                 pcd = os.path.join(
                     get_colmap_viz_folder(cfg_bag)[0],
                     'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
