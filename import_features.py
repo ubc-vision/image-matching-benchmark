@@ -346,6 +346,11 @@ if __name__ == '__main__':
         type=str,
         help='Path to the features to import')
     parser.add_argument(
+        '--dataset',
+        type=str,
+        default='phototourism',
+        help='Directory holding benchmark results.')
+    parser.add_argument(
         '--path_results',
         type=str,
         default='../benchmark-results/phototourism/',
@@ -378,11 +383,11 @@ if __name__ == '__main__':
     elif cfg.subset in ['val', 'test', 'both']:
         if cfg.subset in ['val', 'both']:
             with open(os.path.join('json', 'data',
-                                   'phototourism_val.json')) as f:
+                                   f'{cfg.dataset}_val.json')) as f:
                 seqs += json.load(f)
         if cfg.subset in ['test', 'both']:
             with open(os.path.join('json', 'data',
-                                   'phototourism_test.json')) as f:
+                                   f'{cfg.dataset}_test.json')) as f:
                 seqs += json.load(f)
     else:
         raise ValueError('Invalid subset')
