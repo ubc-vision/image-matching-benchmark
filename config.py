@@ -238,11 +238,11 @@ arg.add_argument('--num_runs_val_relocalization',
                  help='Number of validation runs (relocalization)')
 arg.add_argument('--num_runs_test_stereo',
                  type=int,
-                 default=3,
+                 default=1,
                  help='Number of test runs (stereo)')
 arg.add_argument('--num_runs_test_multiview',
                  type=int,
-                 default=3,
+                 default=1,
                  help='Number of test runs (multiview)')
 arg.add_argument('--num_runs_test_relocalization',
                  type=int,

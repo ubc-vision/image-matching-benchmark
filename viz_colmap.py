@@ -113,11 +113,14 @@ def main(cfg):
         bag_id = 0
         while len(valid_bag_ids) < num_bags:
             cfg_bag.bag_id = bag_id
-            if valid_bag(cfg_bag, deprecated_images):
-                valid_bag_ids.append(bag_id)
+            try:
+                if valid_bag(cfg_bag, deprecated_images):
+                    valid_bag_ids.append(bag_id)
+            except:
+                continue
             bag_id = bag_id + 1
-            if bag_id == _bag_num:
-                raise RuntimeError('Ran out of bags to check out')
+            if bag_id >= _bag_num:
+                break#raise RuntimeError('Ran out of bags to check out')
 
         for _bag_id in valid_bag_ids:
             print(

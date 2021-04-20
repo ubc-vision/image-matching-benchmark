@@ -223,7 +223,7 @@ def main(cfg):
                                         time() - t_cur))
 
                         # Compute average across bags
-                        for metric in cur_dict['run_{}'.format(run)]['25bag']:
+                        for metric in cur_dict['run_{}'.format(run)]['10bag']:
                             pack_helper.average_multiview_over_bags(
                                 cfg, cur_dict['run_{}'.format(run)],
                                 bag_size_list)

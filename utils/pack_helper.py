@@ -231,7 +231,10 @@ def compute_repeatability(res_dict, deprecated_images, cfg):
         for key, values in repeatability_dict.items():
             # Simply return average of all pairs
             for idx in range(len(px_th_list)):
-                ms_list_list[idx] += [values[idx]]
+                try:
+                    ms_list_list[idx] += [values[idx]]
+                except:
+                    print("Warning")
 
         # Now compute average number of keypoints
         acc = []
@@ -374,8 +377,8 @@ def compute_ATE(res_dict, deprecated_images, cfg):
             for _, value in images.items():
 
                 # Get ground truth translation
-                t_gt = calib_dict[value.name.split('.')[0]]['T']
-                r_gt = calib_dict[value.name.split('.')[0]]['R']
+                t_gt = calib_dict['.'.join(value.name.split('.')[:-1])]['T']
+                r_gt = calib_dict['.'.join(value.name.split('.')[:-1])]['R']
                 first_xyz.append(-np.dot(r_gt.T, t_gt))
 
                 # Get actual translation
