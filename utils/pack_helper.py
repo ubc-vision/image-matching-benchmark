@@ -226,7 +226,7 @@ def compute_repeatability(res_dict, deprecated_images, cfg):
     for th in [None] + stereo_thresholds:
         ms_list_list = [[] for i in range(len(px_th_list))]
         repeatability_dict = load_h5_valid_image(
-            get_repeatability_score_file(cfg, th) ,deprecated_images)
+            get_repeatability_score_file(cfg, th), deprecated_images)
 
         for key, values in repeatability_dict.items():
             # Simply return average of all pairs
@@ -252,7 +252,7 @@ def compute_qt_auc(res_dict, deprecated_images, cfg):
     # Load pose error for stereo
     for th in [None] + stereo_thresholds:
         pose_err_dict = load_h5_valid_image(
-            get_stereo_pose_file(cfg, th) ,deprecated_images)
+            get_stereo_pose_file(cfg, th), deprecated_images)
 
         # Gather err_q, err_t
         err_qt = []

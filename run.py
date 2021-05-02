@@ -150,7 +150,7 @@ def eval_multiview(dep_list, cfg, bag_size_list, bag_size_num, job_dict):
 
 def main(cfg):
     ''' Main routine for the benchmark '''
-    DATASET_LIST = ['phototourism', 'cr']
+    DATASET_LIST = ['phototourism', 'cr', 'ggl']
     # Read data and splits
     for dataset in DATASET_LIST:
         for subset in ['val', 'test']:
@@ -187,6 +187,10 @@ def main(cfg):
                         'splits_{}_{}'.format(dataset, cfg_orig.subset)))
             bag_size_list = [b['bag_size'] for b in bag_size_json]
             bag_size_num = [b['num_in_bag'] for b in bag_size_json]
+
+            # Overwrite vis_th for the arcollect dataset.
+            if dataset == 'ggl':
+                cfg_orig.vis_th = 1
 
             for scene in scene_list:
                 print('Working on {}: {}/{}'.format(

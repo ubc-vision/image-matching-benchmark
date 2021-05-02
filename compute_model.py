@@ -176,7 +176,6 @@ def main(cfg):
         np.asarray(desc_dict[pair.split('-')[0]]),
         np.asarray(desc_dict[pair.split('-')[1]]))
                                         for pair in tqdm(pairs_per_th['0.0']))
-
     # Make model dictionary
     model_dict = {}
     inl_dict = {}

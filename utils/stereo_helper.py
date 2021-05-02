@@ -217,7 +217,25 @@ def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
                                   inl_geom, cfg):
     ''' Computes the stereo metrics.'''
 
-    # t = time()
+    # Get R, t from calibration information
+    R_1, t_1 = calib1['R'], calib1['T'].reshape((3, 1))
+    R_2, t_2 = calib2['R'], calib2['T'].reshape((3, 1))
+
+    # Compute dR, dt
+    dR = np.dot(R_2, R_1.T)
+    dT = t_2 - np.dot(dR, t_1)
+
+    # Compute error in R, T
+    kp1n = normalize_keypoints(kp1, calib1['K'])
+    kp2n = normalize_keypoints(kp2, calib2['K'])
+    err_q, err_t = eval_essential_matrix(kp1n[inl_geom[0]], kp2n[inl_geom[1]],
+                                         E, dR, dT)
+
+    # If the dataset does not contain depth information, there is nothing else
+    # to do.
+    if cfg.dataset == 'ggl':
+        return [], [], err_q, err_t, [], True
+
     # Clip keypoints based on shape of matches
     kp1 = kp1[:, :2]
     kp2 = kp2[:, :2]
@@ -243,17 +261,7 @@ def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
     d1[valid1, 0] = dm1[kp1_int[valid1, 1], kp1_int[valid1, 0]]
     d2[valid2, 0] = dm2[kp2_int[valid2, 1], kp2_int[valid2, 0]]
 
-    # Get R, t from calibration information
-    R_1, t_1 = calib1['R'], calib1['T'].reshape((3, 1))
-    R_2, t_2 = calib2['R'], calib2['T'].reshape((3, 1))
-
-    # Compute dR, dt
-    dR = np.dot(R_2, R_1.T)
-    dT = t_2 - np.dot(dR, t_1)
-
     # Project the keypoints using depth
-    kp1n = normalize_keypoints(kp1, calib1['K'])
-    kp2n = normalize_keypoints(kp2, calib2['K'])
     kp1n_p, kp2n_p = get_projected_kp(kp1n, kp2n, d1, d2, dR, dT)
     kp1_p = unnormalize_keypoints(kp1n_p, calib2['K'])
     kp2_p = unnormalize_keypoints(kp2n_p, calib1['K'])
@@ -303,9 +311,5 @@ def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
                                       d2, inl_geom, dR, dT)
     geod_d_list.append(geod_d)
     true_d_list.append(true_d)
-
-    # Compute error in R, T
-    err_q, err_t = eval_essential_matrix(kp1n[inl_geom[0]], kp2n[inl_geom[1]],
-                                         E, dR, dT)
 
     return geod_d_list, true_d_list, err_q, err_t, rep_s_list, True
