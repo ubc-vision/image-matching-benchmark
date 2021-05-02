@@ -1,5 +1,4 @@
 [
-  {"bag_size": 5, "num_in_bag": 100},
+  {"bag_size": 5, "num_in_bag": 30},
   {"bag_size": 10, "num_in_bag": 50},
-  {"bag_size": 25, "num_in_bag": 25}
 ]
