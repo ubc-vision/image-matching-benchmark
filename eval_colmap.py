@@ -110,7 +110,7 @@ def run_colmap_for_bag(cfg):
 
     matches_dict = load_h5(get_filter_match_file(cfg))
 
-    print('Running COLMAP on bagsize {} -- bag {}'.format(
+    print('Running COLMAP on "{}", bagsize {} -- bag {}'.format(
         cfg.scene, cfg.bag_size, cfg.bag_id))
 
     # Additional sanity check to account for crash -- in this case colmap temp
@@ -201,8 +201,8 @@ def run_colmap_for_bag(cfg):
             image_2_name_no_ext = os.path.splitext(image_2_name)[0]
 
             # Load matches
-            matches = np.squeeze(matches_dict[image_1_name_no_ext + '-' +
-                                              image_2_name_no_ext])
+            key = '-'.join([image_1_name_no_ext, image_2_name_no_ext])
+            matches = np.squeeze(matches_dict[key])
             # only write when matches are given
             if matches.ndim == 2:
                 f.write(image_1_name + ' ' + image_2_name + '\n')
@@ -225,6 +225,7 @@ def run_colmap_for_bag(cfg):
         cmd += ['--image_path', os.path.join(colmap_temp_path, 'images')]
         cmd += ['--import_path', os.path.join(colmap_temp_path, 'features')]
 
+        print(' '.join(cmd))
         colmap_res = subprocess.run(cmd)
         if colmap_res.returncode != 0:
             raise RuntimeError(' -- COLMAP failed to import features!')
@@ -242,6 +243,7 @@ def run_colmap_for_bag(cfg):
         cmd += ['--match_type', 'raw']
         cmd += ['--SiftMatching.use_gpu', '0']
 
+        print(' '.join(cmd))
         colmap_res = subprocess.run(cmd)
         if colmap_res.returncode != 0:
             raise RuntimeError(' -- COLMAP failed to import matches!')
@@ -255,9 +257,11 @@ def run_colmap_for_bag(cfg):
         ]
         cmd += ['--output_path', colmap_output_path]
         cmd += ['--Mapper.min_model_size', str(cfg.colmap_min_model_size)]
+        print(' '.join(cmd))
         colmap_res = subprocess.run(cmd)
-        if colmap_res.returncode != 0:
-            raise RuntimeError(' -- COLMAP failed to run mapper!')
+        print(colmap_res.returncode)
+        # if colmap_res.returncode != 0:
+        #     raise RuntimeError(' -- COLMAP failed to run mapper!')
 
         # Delete temp directory after working
         rmtree(colmap_temp_path)

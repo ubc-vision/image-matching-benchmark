@@ -270,7 +270,7 @@ arg.add_argument('--run', type=str, default='', help='')
 arg.add_argument('--bag_size', type=int, default=-1, help='')
 arg.add_argument('--bag_id', type=int, default=-1, help='')
 arg.add_argument('--task', type=str, default='', help='')
-for dataset in ['phototourism', 'cr']:
+for dataset in ['phototourism', 'cr', 'ggl']:
     for subset in ['val', 'test']:
         arg.add_argument('--scenes_{}_{}'.format(dataset, subset),
                          type=str,
@@ -286,113 +286,105 @@ arg.add_argument('--json_deprecated_images',
                  help="JSON file containing deprecated images")
 
 
-def validate_method(method, is_challenge, datasets=['phototourism']):
+def validate_method(method, is_challenge, datasets):
     '''Validate method configuration passed as a JSON file.'''
-    stereo_opts =  {
-            Optional('use_custom_matches'): bool,
-            Optional('custom_matches_name'): str,
-            Optional('matcher'): {
-                'method':
-                And(str, lambda v: v in ['nn']),
-                'distance':
-                And(str, lambda v: v.lower() in ['l1', 'l2', 'hamming']),
-                'flann':
-                bool,
-                'num_nn':
-                And(int, lambda v: v >= 1),
-                'filtering': {
-                    'type':
-                    And(
-                        str, lambda v: v.lower() in [
-                            'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
-                            'fginn_ratio_pairwise'
-                        ]),
-                    Optional('threshold'):
-                    And(Use(float), lambda v: 0 < v <= 1),
-                    Optional('fginn_radius'):
-                    And(Use(float), lambda v: 0 < v < 100.),
-                },
-                Optional('descriptor_distance_filter'): {
-                    'threshold': And(Use(float), lambda v: v > 0),
-                },
-                'symmetric': {
-                    'enabled':
-                    And(bool),
-                    Optional('reduce'):
-                    And(str, lambda v: v.lower() in ['both', 'any']),
-                },
-            },
-            Optional('outlier_filter'): {
-                'method':
-                And(Use(str), lambda v: v.lower() in ['none', 'cne-bp-nd']),
-            },
-            Optional('geom'): {
-                'method':
+    stereo_opts = {
+        Optional('use_custom_matches'): bool,
+        Optional('custom_matches_name'): str,
+        Optional('matcher'): {
+            'method': And(str, lambda v: v in ['nn']),
+            'distance': And(str,
+                            lambda v: v.lower() in ['l1', 'l2', 'hamming']),
+            'flann': bool,
+            'num_nn': And(int, lambda v: v >= 1),
+            'filtering': {
+                'type':
                 And(
                     str, lambda v: v.lower() in [
-                        'cv2-ransac-f', 'cv2-ransac-e', 'cv2-lmeds-f',
-                        'cv2-lmeds-e', 'cv2-7pt', 'cv2-8pt',
-                        'cv2-patched-ransac-f', 'cmp-degensac-f',
-                        'cmp-degensac-f-laf', 'cmp-gc-ransac-f',
-                        'cmp-degensac-f-laf', 'cmp-gc-ransac-f',
-                        'cmp-magsac-f', 'cmp-gc-ransac-e', 'skimage-ransac-f',
-                        'intel-dfe-f'
+                        'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
+                        'fginn_ratio_pairwise'
                     ]),
                 Optional('threshold'):
-                And(Use(float), lambda v: v > 0),
-                Optional('confidence'):
-                And(Use(float), lambda v: v > 0),
-                Optional('max_iter'):
-                And(Use(int), lambda v: v > 0),
-                Optional('postprocess'):
-                And(Use(bool), lambda v: v is not None),
-                Optional('error_type'):
-                And(Use(str),
-                    lambda v: v.lower() in ['sampson', 'symm_epipolar']),
-                Optional('degeneracy_check'):
-                bool,
-            }
-        }
-    mv_opts =  {
-            Optional('use_custom_matches'): bool,
-            Optional('custom_matches_name'): str,
-            Optional('matcher'): {
-                'method':
-                And(str, lambda v: v in ['nn']),
-                'distance':
-                And(str, lambda v: v.lower() in ['l1', 'l2', 'hamming']),
-                'flann':
-                bool,
-                'num_nn':
-                And(int, lambda v: v >= 1),
-                'filtering': {
-                    'type':
-                    And(
-                        str, lambda v: v.lower() in [
-                            'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
-                            'fginn_ratio_pairwise'
-                        ]),
-                    Optional('threshold'):
-                    And(Use(float), lambda v: 0 < v <= 1),
-                    Optional('fginn_radius'):
-                    And(Use(float), lambda v: 0 < v < 100.),
-                },
-                Optional('descriptor_distance_filter'): {
-                    'threshold': And(Use(float), lambda v: v > 0),
-                },
-                'symmetric': {
-                    'enabled':
-                    And(bool),
-                    Optional('reduce'):
-                    And(str, lambda v: v.lower() in ['both', 'any']),
-                },
+                And(Use(float), lambda v: 0 < v <= 1),
+                Optional('fginn_radius'):
+                And(Use(float), lambda v: 0 < v < 100.),
             },
-            Optional('outlier_filter'): {
-                'method':
-                And(Use(str), lambda v: v.lower() in ['none', 'cne-bp-nd']),
+            Optional('descriptor_distance_filter'): {
+                'threshold': And(Use(float), lambda v: v > 0),
             },
-            Optional('colmap'): {},
+            'symmetric': {
+                'enabled':
+                And(bool),
+                Optional('reduce'):
+                And(str, lambda v: v.lower() in ['both', 'any']),
+            },
+        },
+        Optional('outlier_filter'): {
+            'method': And(Use(str),
+                          lambda v: v.lower() in ['none', 'cne-bp-nd']),
+        },
+        Optional('geom'): {
+            'method':
+            And(
+                str, lambda v: v.lower() in [
+                    'cv2-ransac-f', 'cv2-ransac-e', 'cv2-lmeds-f',
+                    'cv2-lmeds-e', 'cv2-7pt', 'cv2-8pt',
+                    'cv2-patched-ransac-f', 'cmp-degensac-f',
+                    'cmp-degensac-f-laf', 'cmp-gc-ransac-f',
+                    'cmp-degensac-f-laf', 'cmp-gc-ransac-f', 'cmp-magsac-f',
+                    'cmp-gc-ransac-e', 'skimage-ransac-f', 'intel-dfe-f'
+                ]),
+            Optional('threshold'):
+            And(Use(float), lambda v: v > 0),
+            Optional('confidence'):
+            And(Use(float), lambda v: v > 0),
+            Optional('max_iter'):
+            And(Use(int), lambda v: v > 0),
+            Optional('postprocess'):
+            And(Use(bool), lambda v: v is not None),
+            Optional('error_type'):
+            And(Use(str), lambda v: v.lower() in ['sampson', 'symm_epipolar']),
+            Optional('degeneracy_check'):
+            bool,
         }
+    }
+    mv_opts = {
+        Optional('use_custom_matches'): bool,
+        Optional('custom_matches_name'): str,
+        Optional('matcher'): {
+            'method': And(str, lambda v: v in ['nn']),
+            'distance': And(str,
+                            lambda v: v.lower() in ['l1', 'l2', 'hamming']),
+            'flann': bool,
+            'num_nn': And(int, lambda v: v >= 1),
+            'filtering': {
+                'type':
+                And(
+                    str, lambda v: v.lower() in [
+                        'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
+                        'fginn_ratio_pairwise'
+                    ]),
+                Optional('threshold'):
+                And(Use(float), lambda v: 0 < v <= 1),
+                Optional('fginn_radius'):
+                And(Use(float), lambda v: 0 < v < 100.),
+            },
+            Optional('descriptor_distance_filter'): {
+                'threshold': And(Use(float), lambda v: v > 0),
+            },
+            'symmetric': {
+                'enabled':
+                And(bool),
+                Optional('reduce'):
+                And(str, lambda v: v.lower() in ['both', 'any']),
+            },
+        },
+        Optional('outlier_filter'): {
+            'method': And(Use(str),
+                          lambda v: v.lower() in ['none', 'cne-bp-nd']),
+        },
+        Optional('colmap'): {},
+    }
     possible_ds = {}
     for dataset in datasets:
         possible_ds[Optional(f'config_{dataset}_stereo')] = stereo_opts
@@ -428,36 +420,39 @@ def validate_method(method, is_challenge, datasets=['phototourism']):
             'keypoint': And(Use(str), lambda v: '_' not in v),
             'descriptor': And(Use(str), lambda v: '_' not in v),
             'num_keypoints': And(int, lambda v: v > 1),
-        }, **possible_ds,
+        },
+        **possible_ds,
     })
-        
-       
+
     schema.validate(method)
 
     # Check for metadata for challenge entries
     if is_challenge and not method['metadata']:
         raise ValueError('Must specify metadata')
-    do_pt_stereo = False 
-    do_pt_multiview = False
-    do_pt_relocalization = False
 
     # Check for incorrect, missing, or redundant options
-    for dataset1 in datasets:
-        # Check what we are running
-        try:
-            do_pt_stereo = do_pt_stereo or bool(method[f'config_{dataset1}_stereo'])
-            do_pt_multiview = do_pt_multiview or  bool(method[f'config_{dataset1}_multiview'])
-            do_pt_relocalization = do_pt_relocalization or bool(method[f'config_{dataset1}_relocalization'])
-        except:
-            continue
-        if do_pt_stereo:
-            print(f'Running: {dataset1}, stereo track')
-        if do_pt_multiview:
-            print(f'Running: {dataset1}, multiview track')
-        if do_pt_relocalization:
-            print(f'Running: {dataset1}, relocalization track')
-    if not any([do_pt_stereo, do_pt_multiview, do_pt_relocalization]):
+    do_any_task = False
+    print(datasets)
+    for cur_dataset in datasets:
+        do_stereo = 'config_{}_stereo'.format(
+            cur_dataset) in method and method['config_{}_stereo'.format(
+                cur_dataset)]
+        do_multiview = 'config_{}_multiview'.format(
+            cur_dataset) in method and method['config_{}_multiview'.format(
+                cur_dataset)]
+        do_relocalization = 'config_{}_relocalization'.format(
+            cur_dataset) in method and method[
+                'config_{}_relocalization'.format(cur_dataset)]
+        if do_stereo:
+            print('Running: {}, stereo track'.format(cur_dataset))
+        if do_multiview:
+            print('Running: {}, multiview track'.format(cur_dataset))
+        if do_relocalization:
+            print('Running: {}, relocalization track'.format(cur_dataset))
+        do_any_task = do_any_task or do_stereo or do_multiview or do_relocalization
+    if not do_any_task:
         raise ValueError('No tasks were specified')
+
     for dataset1 in datasets:
         for task in ['stereo', 'multiview', 'relocalization']:
             cur_key = 'config_{}_{}'.format(dataset1, task)

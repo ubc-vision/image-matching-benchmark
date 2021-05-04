@@ -22,6 +22,7 @@ from config import get_config, print_usage
 from utils import pack_helper
 from utils.io_helper import load_h5, load_json
 from utils.path_helper import get_desc_file
+import random
 
 
 def main(cfg):
@@ -44,8 +45,7 @@ def main(cfg):
         master_dict['properties']['processing_date']))
 
     # Add submission flag
-    master_dict['properties'][
-        'is_submission'] = cfg.is_submission
+    master_dict['properties']['is_submission'] = cfg.is_submission
     print('Flagging as user submission: {}'.format(cfg.is_submission))
 
     # Add descriptor properties
@@ -72,7 +72,7 @@ def main(cfg):
     deprecated_images_list = load_json(cfg.json_deprecated_images)
 
     # Read data and splits
-    DATASET_LIST = ['phototourism', 'cr']
+    DATASET_LIST = ['phototourism', 'cr', 'ggl']
     for dataset in DATASET_LIST:
         # Create empty dictionary
         master_dict[dataset] = OrderedDict()
@@ -145,8 +145,9 @@ def main(cfg):
                     cur_dict = res_dict[scene]['stereo']['run_{}'.format(run)]
                     for metric in metric_list:
                         t_cur = time()
-                        getattr(pack_helper, 'compute_' + metric)(cur_dict,
-                                                                  deprecated_images, cfg)
+                        getattr(pack_helper,
+                                'compute_' + metric)(cur_dict,
+                                                     deprecated_images, cfg)
                         print(
                             ' -- Packing "{}"/"{}"/stereo, run: {}/{}, metric: {} [{:.02f} s]'
                             .format(dataset, scene, run + 1, num_runs, metric,
@@ -183,7 +184,7 @@ def main(cfg):
             cfg.task = 'multiview'
             for scene in scene_list:
                 cfg.scene = scene
-                
+
                 # get deprecated images
                 if scene in deprecated_images_list.keys():
                     deprecated_images = deprecated_images_list[scene]
@@ -223,7 +224,11 @@ def main(cfg):
                                         time() - t_cur))
 
                         # Compute average across bags
-                        for metric in cur_dict['run_{}'.format(run)]['10bag']:
+                        any_key = random.choice([
+                            key for key in cur_dict['run_{}'.format(run)]
+                            if 'bag' in key
+                        ])
+                        for metric in cur_dict['run_{}'.format(run)][any_key]:
                             pack_helper.average_multiview_over_bags(
                                 cfg, cur_dict['run_{}'.format(run)],
                                 bag_size_list)

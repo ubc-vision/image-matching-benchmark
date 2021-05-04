@@ -109,7 +109,7 @@ def load_calib(calib_fullpath_list, subset_index=None):
     return calib
 
 def load_h5_valid_image(path, deprecated_images):
-    return remove_keys(load_h5(path),deprecated_images)
+    return remove_keys(load_h5(path), deprecated_images)
 
 def remove_keys(d, key_list):
     for key in key_list:
