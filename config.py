@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import re
 from schema import Schema, And, Use, Optional
 
 from utils.queue_helper import get_cluster_name
@@ -290,7 +291,7 @@ def validate_method(method, is_challenge, datasets):
     '''Validate method configuration passed as a JSON file.'''
     stereo_opts = {
         Optional('use_custom_matches'): bool,
-        Optional('custom_matches_name'): str,
+        Optional('custom_matches_name'): And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
         Optional('matcher'): {
             'method': And(str, lambda v: v in ['nn']),
             'distance': And(str,
@@ -350,7 +351,7 @@ def validate_method(method, is_challenge, datasets):
     }
     mv_opts = {
         Optional('use_custom_matches'): bool,
-        Optional('custom_matches_name'): str,
+        Optional('custom_matches_name'): And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
         Optional('matcher'): {
             'method': And(str, lambda v: v in ['nn']),
             'distance': And(str,
@@ -416,9 +417,9 @@ def validate_method(method, is_challenge, datasets):
             str,
         },
         'config_common': {
-            'json_label': str,
-            'keypoint': And(Use(str), lambda v: '_' not in v),
-            'descriptor': And(Use(str), lambda v: '_' not in v),
+            'json_label': And(Use(str), lambda v: re.match("^[a-z0-9-_.]*$", v)),
+            'keypoint': And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
+            'descriptor': And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
             'num_keypoints': And(int, lambda v: v > 1),
         },
         **possible_ds,
