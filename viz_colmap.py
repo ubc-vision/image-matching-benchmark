@@ -100,6 +100,8 @@ def main(cfg):
 
     # Load keypoints
     keypoints_dict = load_h5(get_kp_file(cfg))
+    #print ("bag_size_num, bag_size_list")
+    #print (bag_size_num, bag_size_list)
 
     # Loop over bag sizes
     for _bag_num, _bag_size in zip(bag_size_num, bag_size_list):
@@ -118,7 +120,10 @@ def main(cfg):
             try:
                 if valid_bag(cfg_bag, deprecated_images):
                     valid_bag_ids.append(bag_id)
-            except:
+                else:
+                    continue#print (cfg_bag, 'not valid')
+            except Exception as e: 
+                print(e)
                 continue
             bag_id = bag_id + 1
             if bag_id >= _bag_num:
