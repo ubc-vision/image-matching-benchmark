@@ -60,12 +60,8 @@ def eval_viz_stereo(dep_list, cfg, debug=False):
         dep_str = ','.join(dep_list)
 
     # The checks on existing files run inside, as there are many of them
-    if debug:
-        print(' -- Generating stereo visualizations (debug)')
-        cmd_list = [create_sh_cmd('viz_stereo_debug.py', cfg)]
-    else:
-        print(' -- Generating stereo visualizations')
-        cmd_list = [create_sh_cmd('viz_stereo.py', cfg)]
+    print(' -- Generating stereo visualizations')
+    cmd_list = [create_sh_cmd('viz_stereo.py', cfg)]
     create_and_queue_jobs(cmd_list, cfg, dep_str)
 
 
@@ -121,8 +117,8 @@ def eval_multiview(dep_list, cfg, bag_size_list, bag_size_num, job_dict):
             if not is_colmap_complete(cfg_bag):
                 # Check if other program is doing the same job
                 if job_key in job_dict:
-                    print(' -- {} is already running on {}'.format('multiview',
-                            job_dict[job_key]))
+                    print(' -- {} is already running on {}'.format(
+                        'multiview', job_dict[job_key]))
                     return job_dict[job_key].split('-')
 
                 cmd_list += [create_sh_cmd('eval_colmap.py', cfg_bag)]
@@ -143,14 +139,15 @@ def eval_multiview(dep_list, cfg, bag_size_list, bag_size_num, job_dict):
     if len(cmd_list) > 0:
         colmap_jobs += [create_and_queue_jobs(cmd_list, cfg, dep_str)]
     # save colmap jobs list under its job key
-    if len(colmap_jobs)!=0:
+    if len(colmap_jobs) != 0:
         job_dict[job_key] = '-'.join(colmap_jobs)
     return colmap_jobs
 
 
 def main(cfg):
     ''' Main routine for the benchmark '''
-    DATASET_LIST = ['phototourism', 'cr', 'ggl']
+
+    DATASET_LIST = ['phototourism', 'pragueparks', 'googleurban']
     # Read data and splits
     for dataset in DATASET_LIST:
         for subset in ['val', 'test']:
@@ -163,8 +160,10 @@ def main(cfg):
     method_list = load_json(cfg.json_method)
     for i, method in enumerate(method_list):
         print('Validating method {}/{}: "{}"'.format(
-        i + 1, len(method_list), method['config_common']['json_label']))
-        validate_method(method, is_challenge=cfg.is_challenge, datasets=DATASET_LIST)
+            i + 1, len(method_list), method['config_common']['json_label']))
+        validate_method(method,
+                        is_challenge=cfg.is_challenge,
+                        datasets=DATASET_LIST)
 
     # Back up original config
     cfg_orig = deepcopy(cfg)
@@ -175,7 +174,6 @@ def main(cfg):
         # accumulate packing dependencies over datasets and runs
         all_stereo_jobs = []
         all_multiview_jobs = []
-        all_relocalization_jobs = []
 
         for dataset in DATASET_LIST:
             # Load data config
@@ -189,7 +187,7 @@ def main(cfg):
             bag_size_num = [b['num_in_bag'] for b in bag_size_json]
 
             # Overwrite vis_th for the arcollect dataset.
-            if dataset == 'ggl':
+            if dataset == 'googleurban':
                 cfg_orig.vis_th = 1
 
             for scene in scene_list:
@@ -197,7 +195,7 @@ def main(cfg):
                     method['config_common']['json_label'], dataset, scene))
 
                 # For each task
-                for task in ['stereo', 'multiview', 'relocalization']:
+                for task in ['stereo', 'multiview']:
                     # Skip if the key does not exist or it is empty
                     cur_key = 'config_{}_{}'.format(dataset, task)
                     if cur_key not in method or not method[cur_key]:
@@ -227,7 +225,6 @@ def main(cfg):
                     # Empty dependencies
                     stereo_jobs = []
                     multiview_jobs = []
-                    relocalization_jobs = []
 
                     num_runs = getattr(
                         cfg, 'num_runs_{}_{}'.format(cfg.subset, task))
@@ -261,17 +258,13 @@ def main(cfg):
                         if task == 'multiview' and cfg.run_viz:
                             eval_viz_colmap(multiview_jobs, cfg)
 
-                        if task == 'relocalization' and cfg.eval_relocalization:
-                            raise NotImplementedError(
-                                'TODO relocalization task')
-
         # Packing -- can be skipped with --skip_packing=True
         # For instance, when only generating visualizations
         if not cfg.skip_packing:
             cfg = deepcopy(cfg_orig)
             cfg.method_dict = deepcopy(method)
             eval_packing(
-                all_stereo_jobs + all_multiview_jobs + all_relocalization_jobs,
+                all_stereo_jobs + all_multiview_jobs,
                 cfg)
 
 

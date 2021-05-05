@@ -102,7 +102,7 @@ def main(cfg):
     # Generate and save the images
     for i, pair in enumerate(pairs):
         # Load depth maps
-        if cfg.dataset != 'ggl':
+        if cfg.dataset != 'googleurban':
             depth = {}
             for pair in pairs:
                 files = pair.split('-')
@@ -142,7 +142,7 @@ def main(cfg):
         dR = np.dot(R_2, R_1.T)
         dT = t_2 - np.dot(dR, t_1)
 
-        if cfg.dataset != 'ggl':
+        if cfg.dataset != 'googleurban':
             kp1_int = np.round(kp1).astype(int)
             kp2_int = np.round(kp2).astype(int)
 
@@ -202,12 +202,12 @@ def main(cfg):
         # canvas
         im, v_offset, h_offset = build_composite_image(
             os.path.join(data_dir, 'images',
-                         fn1 + ('.png' if cfg.dataset == 'ggl' else '.jpg')),
+                         fn1 + ('.png' if cfg.dataset == 'googleurban' else '.jpg')),
             os.path.join(data_dir, 'images',
-                         fn2 + ('.png' if cfg.dataset == 'ggl' else '.jpg')),
+                         fn2 + ('.png' if cfg.dataset == 'googleurban' else '.jpg')),
             margin=5,
             axis=1 if
-            (not cfg.viz_composite_vert or cfg.dataset == 'ggl') else 0)
+            (not cfg.viz_composite_vert or cfg.dataset == 'googleurban') else 0)
 
         plt.figure(figsize=(10, 10))
         plt.imshow(im)
@@ -223,7 +223,7 @@ def main(cfg):
 
         # Plot matches
         # Points are normalized by the focals, which are on average ~670.
-        max_dist = 2e-4 if cfg.dataset == 'ggl' else 5
+        max_dist = 2e-4 if cfg.dataset == 'googleurban' else 5
         cmap = matplotlib.cm.get_cmap('summer')
         order = list(range(len(d)))
         random.shuffle(order)

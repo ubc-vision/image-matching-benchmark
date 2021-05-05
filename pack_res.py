@@ -21,7 +21,7 @@ from time import time
 from config import get_config, print_usage
 from utils import pack_helper
 from utils.io_helper import load_h5, load_json
-from utils.path_helper import get_desc_file
+from utils.path_helper import get_desc_file, generate_uuid
 import random
 
 
@@ -72,7 +72,7 @@ def main(cfg):
     deprecated_images_list = load_json(cfg.json_deprecated_images)
 
     # Read data and splits
-    DATASET_LIST = ['phototourism', 'cr', 'ggl']
+    DATASET_LIST = ['phototourism', 'pragueparks', 'googleurban']
     for dataset in DATASET_LIST:
         # Create empty dictionary
         master_dict[dataset] = OrderedDict()
@@ -97,7 +97,7 @@ def main(cfg):
         # Create empty dicts
         for scene in ['allseq'] + scene_list:
             res_dict[scene] = OrderedDict()
-            for task in ['stereo', 'multiview', 'relocalization']:
+            for task in ['stereo', 'multiview']:
                 res_dict[scene][task] = OrderedDict()
                 res_dict[scene][task]['run_avg'] = OrderedDict()
                 if task == 'multiview':
@@ -226,7 +226,7 @@ def main(cfg):
                         # Compute average across bags
                         any_key = random.choice([
                             key for key in cur_dict['run_{}'.format(run)]
-                            if 'bag' in key
+                            if ('bag' in key and key != 'bag_avg')
                         ])
                         for metric in cur_dict['run_{}'.format(run)][any_key]:
                             pack_helper.average_multiview_over_bags(
@@ -253,21 +253,21 @@ def main(cfg):
 
             print(' -- Finished packing multiview in {:.01f} sec.'.format(
                 time() - t))
-
-            # Relocalization -- multiple runs
-            # TODO
         else:
             print('Skipping "{}/multiview"'.format(dataset))
 
+    # Add a unique identifier (equivalent to "submission id" in previous versions.
+    master_dict['uuid'] = generate_uuid(cfg)
+
     # Dump packed result
-    print(' -- Saving to: "{}"'.format(
-        cfg.method_dict['config_common']['json_label']))
     if not os.path.exists(cfg.path_pack):
         os.makedirs(cfg.path_pack)
     json_dump_file = os.path.join(
         cfg.path_pack,
-        '{}.json'.format(cfg.method_dict['config_common']['json_label']))
+        '{}-{}.json'.format(master_dict['uuid'],
+                            cfg.method_dict['config_common']['json_label']))
 
+    print(' -- Saving to: "{}"'.format(json_dump_file))
     with open(json_dump_file, 'w') as outfile:
         json.dump(master_dict, outfile, indent=2)
 

@@ -233,7 +233,7 @@ def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
 
     # If the dataset does not contain depth information, there is nothing else
     # to do.
-    if cfg.dataset == 'ggl':
+    if cfg.dataset == 'googleurban':
         return [], [], err_q, err_t, [], True
 
     # Clip keypoints based on shape of matches

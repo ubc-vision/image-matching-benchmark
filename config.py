@@ -128,10 +128,6 @@ arg.add_argument('--eval_multiview',
                  type=str2bool,
                  default=True,
                  help='Set to false to bypass the multiview task')
-arg.add_argument('--eval_relocalization',
-                 type=str2bool,
-                 default=True,
-                 help='Set to false to bypass the relocalization task')
 
 # Some configurations for colmap
 arg.add_argument('--colmap_min_model_size',
@@ -232,10 +228,6 @@ arg.add_argument('--num_runs_val_multiview',
                  type=int,
                  default=1,
                  help='Number of validation runs (multiview)')
-arg.add_argument('--num_runs_val_relocalization',
-                 type=int,
-                 default=1,
-                 help='Number of validation runs (relocalization)')
 arg.add_argument('--num_runs_test_stereo',
                  type=int,
                  default=1,
@@ -244,10 +236,6 @@ arg.add_argument('--num_runs_test_multiview',
                  type=int,
                  default=1,
                  help='Number of test runs (multiview)')
-arg.add_argument('--num_runs_test_relocalization',
-                 type=int,
-                 default=1,
-                 help='Number of test runs (relocalization)')
 
 # Challenge settings
 arg = add_argument_group('Challenge settings')
@@ -270,7 +258,7 @@ arg.add_argument('--run', type=str, default='', help='')
 arg.add_argument('--bag_size', type=int, default=-1, help='')
 arg.add_argument('--bag_id', type=int, default=-1, help='')
 arg.add_argument('--task', type=str, default='', help='')
-for dataset in ['phototourism', 'cr', 'ggl']:
+for dataset in ['phototourism', 'pragueparks', 'googleurban']:
     for subset in ['val', 'test']:
         arg.add_argument('--scenes_{}_{}'.format(dataset, subset),
                          type=str,
@@ -389,7 +377,6 @@ def validate_method(method, is_challenge, datasets):
     for dataset in datasets:
         possible_ds[Optional(f'config_{dataset}_stereo')] = stereo_opts
         possible_ds[Optional(f'config_{dataset}_multiview')] = mv_opts
-        possible_ds[Optional(f'config_{dataset}_relocalization')] = {}
     # Define a dictionary schema
     # TODO would be nice to not copy-paste for multiple datasets
     schema = Schema({
@@ -440,21 +427,16 @@ def validate_method(method, is_challenge, datasets):
         do_multiview = 'config_{}_multiview'.format(
             cur_dataset) in method and method['config_{}_multiview'.format(
                 cur_dataset)]
-        do_relocalization = 'config_{}_relocalization'.format(
-            cur_dataset) in method and method[
-                'config_{}_relocalization'.format(cur_dataset)]
         if do_stereo:
             print('Running: {}, stereo track'.format(cur_dataset))
         if do_multiview:
             print('Running: {}, multiview track'.format(cur_dataset))
-        if do_relocalization:
-            print('Running: {}, relocalization track'.format(cur_dataset))
-        do_any_task = do_any_task or do_stereo or do_multiview or do_relocalization
+        do_any_task = do_any_task or do_stereo or do_multiview
     if not do_any_task:
         raise ValueError('No tasks were specified')
 
     for dataset1 in datasets:
-        for task in ['stereo', 'multiview', 'relocalization']:
+        for task in ['stereo', 'multiview']:
             cur_key = 'config_{}_{}'.format(dataset1, task)
             if cur_key not in method:
                 print('Key "{}" is empty -> skipping check'.format(cur_key))
@@ -629,16 +611,14 @@ def get_config():
         cfg.path_pack = 'packed-debug'
 
     # Overwrite deprecated images json path -- unless already overwritten
-    # TODO: This is a bit fragile -- fix it next time around
     if not cfg.json_deprecated_images:
         cfg.json_deprecated_images = 'json/deprecated_images.json'
 
     # Enforce challenge settings
-    if cfg.is_challenge:
-        if cfg.num_runs_test_stereo != 3 or \
-                cfg.num_runs_test_multiview != 3 or \
-                cfg.num_runs_test_relocalization != 3:
-            raise ValueError('Violating pre-set runs on challenge mode!')
+    # if cfg.is_challenge:
+    #     if cfg.num_runs_test_stereo != 3 or \
+    #        cfg.num_runs_test_multiview != 3:
+    #         raise ValueError('Violating pre-set runs on challenge mode!')
 
     # "Ignore" walltime on Google Cloud Compute and change some defaults
     if get_cluster_name() == 'gcp' and cfg.run_mode == 'batch':
