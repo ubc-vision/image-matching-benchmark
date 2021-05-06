@@ -264,6 +264,9 @@ python import_features.py --path_features=<path_to_folder> --kp_name=<kp_name> -
 
 (Custom matches are a recent addition: please reach out to us via email/github issues if you encounter problems using it.)
 
+## Using validation script to validate your submission
+Plase always run `submission_validator.py` on your submission zip file to make sure your submission is in proper format before uploading to our [challenge website](https://www.cs.ubc.ca/research/image-matching-challenge/submit/).
+
 ## Terms and conditions
 
 Challenge submissions have additional restrictions in place, such as for instance in the maximum number of iterations in the RANSAC loop, or banning robust estimators which assume known intrinsics and estimate the Essential matrix instead of the Fundamental matrix (which are implemented in the benchmark for the sake of completeness). Please refer to the [submission page](https://www.cs.ubc.ca/research/image-matching-challenge/submit/) on the website for further details.
