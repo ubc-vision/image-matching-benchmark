@@ -68,12 +68,23 @@ def main(cfg):
         master_dict['properties']['descriptor_type'],
         master_dict['properties']['descriptor_nbytes']))
 
-    # get deprecated image list
-    deprecated_images_list = load_json(cfg.json_deprecated_images)
+    deprecated_images_all = load_json(cfg.json_deprecated_images)
+    if cfg.dataset in deprecated_images_all and cfg.scene in deprecated_images_all[
+            cfg.dataset]:
+        deprecated_images = deprecated_images_all[cfg.dataset][cfg.scene]
+    else:
+        deprecated_images = []
 
     # Read data and splits
     DATASET_LIST = ['phototourism', 'pragueparks', 'googleurban']
     for dataset in DATASET_LIST:
+        # Skip if not in config
+        if ('config_{}_stereo'.format(dataset) not in method
+                and 'config_{}_multiview'.format(dataset) not in method) or (
+                    not method['config_{}_stereo'.format(dataset)]
+                    and not method['config_{}_multiview'.format(dataset)]):
+            continue
+
         # Create empty dictionary
         master_dict[dataset] = OrderedDict()
         res_dict = OrderedDict()
@@ -115,13 +126,6 @@ def main(cfg):
             cfg.dataset = dataset
             cfg.task = 'stereo'
             for scene in scene_list:
-
-                # get deprecated images
-                if scene in deprecated_images_list.keys():
-                    deprecated_images = deprecated_images_list[scene]
-                else:
-                    deprecated_images = []
-
                 cfg.scene = scene
 
                 res_dict[scene]['stereo']['run_avg'] = OrderedDict()
@@ -134,8 +138,9 @@ def main(cfg):
                 metric_list += ['avg_num_keypoints']
                 # metric_list += ['matching_scores_epipolar']
                 metric_list += ['num_inliers']
-                metric_list += ['matching_scores_depth_projection']
-                metric_list += ['repeatability']
+                if dataset != 'googleurban':
+                    metric_list += ['matching_scores_depth_projection']
+                    metric_list += ['repeatability']
                 metric_list += ['qt_auc']
                 metric_list += ['timings']
 
@@ -184,12 +189,6 @@ def main(cfg):
             cfg.task = 'multiview'
             for scene in scene_list:
                 cfg.scene = scene
-
-                # get deprecated images
-                if scene in deprecated_images_list.keys():
-                    deprecated_images = deprecated_images_list[scene]
-                else:
-                    deprecated_images = []
 
                 for run in ['run_avg'
                             ] + ['run_{}'.format(f) for f in range(num_runs)]:

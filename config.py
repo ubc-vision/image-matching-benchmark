@@ -195,15 +195,15 @@ arg.add_argument('--max_num_images_viz_multiview',
                  help='Clip the number of multiview visualizations per bag')
 arg.add_argument('--num_viz_colmap_subsets_bagsize3',
                  type=int,
-                 default=10,
+                 default=0,
                  help='Number of colmap subsets to visualize')
 arg.add_argument('--num_viz_colmap_subsets_bagsize5',
                  type=int,
-                 default=1,
+                 default=0,
                  help='Number of colmap subsets to visualize')
 arg.add_argument('--num_viz_colmap_subsets_bagsize10',
                  type=int,
-                 default=0,
+                 default=1,
                  help='Number of colmap subsets to visualize')
 arg.add_argument('--num_viz_colmap_subsets_bagsize25',
                  type=int,

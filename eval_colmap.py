@@ -224,8 +224,6 @@ def run_colmap_for_bag(cfg):
         ]
         cmd += ['--image_path', os.path.join(colmap_temp_path, 'images')]
         cmd += ['--import_path', os.path.join(colmap_temp_path, 'features')]
-
-        print(' '.join(cmd))
         colmap_res = subprocess.run(cmd)
         if colmap_res.returncode != 0:
             raise RuntimeError(' -- COLMAP failed to import features!')
@@ -242,8 +240,6 @@ def run_colmap_for_bag(cfg):
         ]
         cmd += ['--match_type', 'raw']
         cmd += ['--SiftMatching.use_gpu', '0']
-
-        print(' '.join(cmd))
         colmap_res = subprocess.run(cmd)
         if colmap_res.returncode != 0:
             raise RuntimeError(' -- COLMAP failed to import matches!')
@@ -257,11 +253,9 @@ def run_colmap_for_bag(cfg):
         ]
         cmd += ['--output_path', colmap_output_path]
         cmd += ['--Mapper.min_model_size', str(cfg.colmap_min_model_size)]
-        print(' '.join(cmd))
         colmap_res = subprocess.run(cmd)
-        print(colmap_res.returncode)
-        # if colmap_res.returncode != 0:
-        #     raise RuntimeError(' -- COLMAP failed to run mapper!')
+        if colmap_res.returncode != 0:
+            raise RuntimeError(' -- COLMAP failed to run mapper!')
 
         # Delete temp directory after working
         rmtree(colmap_temp_path)

@@ -46,39 +46,28 @@ def main(cfg):
     # Instead we use 0, ..., cfg.num_viz_stereo_pairs
     viz_folder_hq, viz_folder_lq = get_stereo_viz_folder(cfg)
 
-    # # Do not re-run if files already exist -- off for now
-    # if os.path.exists(viz_folder_lq):
-    #     if all([
-    #             os.path.exists(
-    #                 os.path.join(viz_folder_lq, 'stereo-{}.jpg'.format(i)))
-    #             for i in range(cfg.num_viz_stereo_pairs)
-    #     ]):
-    #         print(' -- already exists, skipping stereo visualization')
-    #         return
-
     print(' -- Visualizations, stereo: "{}/{}"'.format(cfg.dataset, cfg.scene))
     t_start = time()
 
     # Load deprecated images list
-    deprecated_images_list = load_json(cfg.json_deprecated_images)
-    if cfg.scene in deprecated_images_list.keys():
-        deprecated_images = deprecated_images_list[cfg.scene]
+    deprecated_images_all = load_json(cfg.json_deprecated_images)
+    if cfg.dataset in deprecated_images_all and cfg.scene in deprecated_images_all[
+            cfg.dataset]:
+        deprecated_images = deprecated_images_all[cfg.dataset][cfg.scene]
     else:
         deprecated_images = []
 
     # Load keypoints, matches and errors
     keypoints_dict = load_h5_valid_image(get_kp_file(cfg), deprecated_images)
     matches_dict = load_h5_valid_image(get_match_file(cfg), deprecated_images)
+    ransac_inl_dict = load_h5_valid_image(get_geom_inl_file(cfg), deprecated_images)
 
     # Hacky: We need to recompute the errors, loading only for the keys
-    # errors_dict = load_h5_valid_image(
-    #     get_stereo_epipolar_final_match_file(cfg, th='0.1'), deprecated_images)
     data_dir = get_data_path(cfg)
     pairs_all = get_pairs_per_threshold(data_dir)['0.1']
-    deprecated_images_list = load_json(cfg.json_deprecated_images)
     pairs = []
     for pair in pairs_all:
-        if all([key not in deprecated_images_list for key in pair.split('-')]):
+        if all([key not in deprecated_images for key in pair.split('-')]):
             pairs += [pair]
 
     # Create results folder if it does not exist
@@ -99,19 +88,19 @@ def main(cfg):
         if len(pairs) == cfg.num_viz_stereo_pairs:
             break
 
+    # Load depth maps
+    depth = {}
+    if cfg.dataset != 'googleurban':
+        for pair in pairs:
+            files = pair.split('-')
+            for f in files:
+                if f not in depth:
+                    depth[f] = load_depth(
+                        os.path.join(data_dir, 'depth_maps',
+                                     '{}.h5'.format(f)))
+
     # Generate and save the images
     for i, pair in enumerate(pairs):
-        # Load depth maps
-        if cfg.dataset != 'googleurban':
-            depth = {}
-            for pair in pairs:
-                files = pair.split('-')
-                for f in files:
-                    if f not in depth:
-                        depth[f] = load_depth(
-                            os.path.join(data_dir, 'depth_maps',
-                                         '{}.h5'.format(f)))
-
         # load metadata
         fn1, fn2 = pair.split('-')
         calib_dict = load_calib([
@@ -122,9 +111,6 @@ def main(cfg):
         ])
         calc1 = calib_dict[fn1]
         calc2 = calib_dict[fn2]
-        matches = matches_dict[pair]
-        ransac_inl_dict = load_h5_valid_image(get_geom_inl_file(cfg),
-                                              deprecated_images)
         inl = ransac_inl_dict[pair]
 
         # Get depth for keypoints
@@ -201,13 +187,15 @@ def main(cfg):
 
         # canvas
         im, v_offset, h_offset = build_composite_image(
-            os.path.join(data_dir, 'images',
-                         fn1 + ('.png' if cfg.dataset == 'googleurban' else '.jpg')),
-            os.path.join(data_dir, 'images',
-                         fn2 + ('.png' if cfg.dataset == 'googleurban' else '.jpg')),
+            os.path.join(
+                data_dir, 'images',
+                fn1 + ('.png' if cfg.dataset == 'googleurban' else '.jpg')),
+            os.path.join(
+                data_dir, 'images',
+                fn2 + ('.png' if cfg.dataset == 'googleurban' else '.jpg')),
             margin=5,
-            axis=1 if
-            (not cfg.viz_composite_vert or cfg.dataset == 'googleurban') else 0)
+            axis=1 if (not cfg.viz_composite_vert
+                       or cfg.dataset == 'googleurban') else 0)
 
         plt.figure(figsize=(10, 10))
         plt.imshow(im)
@@ -256,7 +244,7 @@ def main(cfg):
 
         plt.close()
 
-    print('done [{:.02f} s.]'.format(time() - t_start))
+    print('Done [{:.02f} s.]'.format(time() - t_start))
 
 
 if __name__ == '__main__':

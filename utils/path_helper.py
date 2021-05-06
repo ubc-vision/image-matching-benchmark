@@ -234,6 +234,12 @@ def get_match_file(cfg):
     return os.path.join(get_match_path(cfg), 'matches.h5')
 
 
+def get_filter_match_file(cfg):
+    '''Returns the path to the match file after pre-filtering.'''
+
+    return os.path.join(get_filter_path(cfg), 'matches.h5')
+
+
 def get_match_cost_file(cfg):
     '''Returns the path to the match file.'''
 

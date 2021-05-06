@@ -18,13 +18,12 @@ from copy import deepcopy
 from collections import OrderedDict
 import numpy as np
 
-from third_party.colmap.scripts.python.read_write_model import (
-        read_model, qvec2rotmat)
+from third_party.colmap.scripts.python.read_write_model import (read_model,
+                                                                qvec2rotmat)
 from utils.colmap_helper import (get_best_colmap_index,
                                  get_colmap_image_path_list,
                                  get_colmap_output_path, get_colmap_pose_file,
-                                 get_colmap_image_path_list,
-                                 valid_bag)
+                                 get_colmap_image_path_list, valid_bag)
 from utils.io_helper import load_json
 from utils.path_helper import (
     get_data_path, get_fullpath_list, get_item_name_list, get_kp_file,
@@ -35,16 +34,19 @@ from utils.path_helper import (
     get_stereo_epipolar_final_match_file, get_stereo_pose_file,
     get_repeatability_score_file, get_pairs_per_threshold, get_match_cost_file,
     get_filter_cost_file, get_geom_cost_file, get_desc_file,
-    get_filter_match_file)
+    get_filter_match_file, get_match_file, get_filter_match_file,
+    get_geom_inl_file)
 from utils.eval_helper import (ate_ransac, calc_std, calc_max_trans_error,
                                calc_num_iter_ransac)
 from utils.load_helper import load_calib, load_h5_valid_image
+
 
 def get_current_date():
     curr_date = datetime.datetime.now()
     curr_date = format(curr_date.year, '04')[2:] + '-' + \
         format(curr_date.month, '02') + '-' + format(curr_date.day, '02')
     return curr_date
+
 
 def get_num_in_bag(cfg):
     '''Retrieve number of bags per subset from the json file.'''
@@ -63,8 +65,7 @@ def compute_avg_num_keypoints(res_dict, deprecated_images, cfg):
     '''Compute the average number of keypoints and add it to the dictionary.'''
 
     # Load keypoints file
-    keypoints_dict = load_h5_valid_image(
-        get_kp_file(cfg),deprecated_images)
+    keypoints_dict = load_h5_valid_image(get_kp_file(cfg), deprecated_images)
 
     # Simply return average of all keypoints per image
     num_kp_list = []
@@ -78,31 +79,31 @@ def compute_avg_num_keypoints(res_dict, deprecated_images, cfg):
 def compute_num_inliers(res_dict, deprecated_images, cfg):
     '''Compile match numbers at different stages into the dictionary.'''
 
-    # if cfg.method_dict['config_{}_{}'.format(cfg.dataset,
-    #                                          cfg.task)]['use_custom_matches']:
-    #     raise NotImplementedError(
-    #         'Probably read only once? What to do with runs?')
-
     # Load pre-computed pairs with the new visibility criteria
     data_dir = get_data_path(cfg)
     pairs_per_th = get_pairs_per_threshold(data_dir)
     stereo_thresholds = list(pairs_per_th.keys())
-    epipolar_err_dict = {}
+    matches_all = {}
+    matches_all['matcher'] = load_h5_valid_image(get_match_file(cfg),
+                                                 deprecated_images)
+    matches_all['filter'] = load_h5_valid_image(get_filter_match_file(cfg),
+                                                deprecated_images)
+    matches_all['geom'] = load_h5_valid_image(get_geom_inl_file(cfg),
+                                              deprecated_images)
 
-    # Load epipolar error file
-    for th in [None] + stereo_thresholds:
-        epipolar_err_dict['matcher'] = load_h5_valid_image(
-            get_stereo_epipolar_pre_match_file(cfg, th) ,deprecated_images)
-        epipolar_err_dict['filter'] = load_h5_valid_image(
-            get_stereo_epipolar_refined_match_file(cfg, th) ,deprecated_images)
-        epipolar_err_dict['geom'] = load_h5_valid_image(
-            get_stereo_epipolar_final_match_file(cfg, th) ,deprecated_images)
+    # We can deprecate the old visibility metrics
+    for key_stage in matches_all:
+        res_dict['num_matches_{}'.format(key_stage)] = 0
 
-        for key_stage, values1 in epipolar_err_dict.items():
+    # Compute number of matches
+    for th in stereo_thresholds:
+        for key_stage, values1 in matches_all.items():
             # Simply return average of all pairs
             num_matches = []
             for key, values2 in values1.items():
-                num_matches.append(len(values2))
+                if len(pairs_per_th[th]) == 0 or key not in pairs_per_th[th]:
+                    continue
+                num_matches.append(values2.shape[1] if len(values2) > 0 else 0)
 
             # Save the number of inliers
             vis_label = '' if th is None else '_th_{}'.format(th)
@@ -115,22 +116,22 @@ def compute_timings(res_dict, deprecated_images, cfg):
 
     # Load cost files
     try:
-        cost_match = load_h5_valid_image(
-            get_match_cost_file(cfg) ,deprecated_images)
+        cost_match = load_h5_valid_image(get_match_cost_file(cfg),
+                                         deprecated_images)
         res_dict['match_cost'] = cost_match['cost']
     except Exception:
         res_dict['match_cost'] = 0
 
     try:
-        cost_filter = load_h5_valid_image(
-            get_filter_cost_file(cfg) ,deprecated_images)
+        cost_filter = load_h5_valid_image(get_filter_cost_file(cfg),
+                                          deprecated_images)
         res_dict['filter_cost'] = cost_filter['cost']
     except Exception:
         res_dict['filter_cost'] = 0
 
     try:
-        cost_geom = load_h5_valid_image(
-            get_geom_cost_file(cfg) ,deprecated_images)
+        cost_geom = load_h5_valid_image(get_geom_cost_file(cfg),
+                                        deprecated_images)
         res_dict['geom_cost'] = cost_geom['cost']
     except Exception:
         res_dict['geom_cost'] = 0
@@ -150,11 +151,11 @@ def compute_matching_scores_epipolar(res_dict, deprecated_images, cfg):
     for th in [None] + stereo_thresholds:
         # Init empty list
         epipolar_err_dict['pre_match'] = load_h5_valid_image(
-            get_stereo_epipolar_pre_match_file(cfg, th) ,deprecated_images)
+            get_stereo_epipolar_pre_match_file(cfg, th), deprecated_images)
         epipolar_err_dict['refined_match'] = load_h5_valid_image(
-            get_stereo_epipolar_refined_match_file(cfg, th) ,deprecated_images)
+            get_stereo_epipolar_refined_match_file(cfg, th), deprecated_images)
         epipolar_err_dict['final_match'] = load_h5_valid_image(
-            get_stereo_epipolar_final_match_file(cfg, th) ,deprecated_images)
+            get_stereo_epipolar_final_match_file(cfg, th), deprecated_images)
 
         for key_stage, values1 in epipolar_err_dict.items():
             if key_stage not in values:
@@ -190,11 +191,14 @@ def compute_matching_scores_depth_projection(res_dict, deprecated_images, cfg):
     # Load epipolar error file
     for th in [None] + stereo_thresholds:
         reprojection_err_dict['pre_match'] = load_h5_valid_image(
-            get_stereo_depth_projection_pre_match_file(cfg, th) ,deprecated_images)
+            get_stereo_depth_projection_pre_match_file(cfg, th),
+            deprecated_images)
         reprojection_err_dict['refined_match'] = load_h5_valid_image(
-            get_stereo_depth_projection_refined_match_file(cfg, th) ,deprecated_images)
+            get_stereo_depth_projection_refined_match_file(cfg, th),
+            deprecated_images)
         reprojection_err_dict['final_match'] = load_h5_valid_image(
-            get_stereo_depth_projection_final_match_file(cfg, th) ,deprecated_images)
+            get_stereo_depth_projection_final_match_file(cfg, th),
+            deprecated_images)
         for key_stage, values1 in reprojection_err_dict.items():
             acc = []
             for px_th in px_th_list:
@@ -254,8 +258,8 @@ def compute_qt_auc(res_dict, deprecated_images, cfg):
 
     # Load pose error for stereo
     for th in [None] + stereo_thresholds:
-        pose_err_dict = load_h5_valid_image(
-            get_stereo_pose_file(cfg, th), deprecated_images)
+        pose_err_dict = load_h5_valid_image(get_stereo_pose_file(cfg, th),
+                                            deprecated_images)
 
         # Gather err_q, err_t
         err_qt = []
@@ -299,14 +303,14 @@ def compute_qt_auc_colmap(res_dict, deprecated_images, cfg):
     qt_hist_list = np.empty([0, 10])
     for bag_id in range(get_num_in_bag(cfg_bag)):
         cfg_bag.bag_id = bag_id
-        
+
         # Skip if bag contains deprecated images
         if not valid_bag(cfg_bag, deprecated_images):
             continue
 
         # Load pose error for colmap
-        pose_err_dict = load_h5_valid_image(
-            get_colmap_pose_file(cfg_bag) ,deprecated_images)
+        pose_err_dict = load_h5_valid_image(get_colmap_pose_file(cfg_bag),
+                                            deprecated_images)
 
         # Gather err_q, err_t
         err_qt = []
@@ -415,8 +419,8 @@ def compute_num_input_matches(res_dict, deprecated_images, cfg):
     #         'TODO Load the right dict with custom matches')
 
     # Read match dict
-    matches_dict = load_h5_valid_image(
-        get_filter_match_file(cfg) ,deprecated_images)
+    matches_dict = load_h5_valid_image(get_filter_match_file(cfg),
+                                       deprecated_images)
 
     # For every bag, compute the number of matches going into colmap
     bag_size_json = load_json(

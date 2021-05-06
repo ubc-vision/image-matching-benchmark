@@ -187,7 +187,6 @@ def main(cfg):
         os.makedirs(get_stereo_path(cfg))
 
     # Finally, save packed scores and errors
-
     if cfg.dataset != 'googleurban':
         save_h5(geo_s_dict_pre_match, get_stereo_epipolar_pre_match_file(cfg))
         save_h5(geo_s_dict_refined_match,

@@ -48,9 +48,10 @@ def main(cfg):
     bag_size_num = [b['num_in_bag'] for b in bag_size_json]
 
     # Load deprecated images list
-    deprecated_images_list = load_json(cfg.json_deprecated_images)
-    if cfg.scene in deprecated_images_list.keys():
-        deprecated_images = deprecated_images_list[cfg.scene]
+    deprecated_images_all = load_json(cfg.json_deprecated_images)
+    if cfg.scene in deprecated_images_all and cfg.scene in deprecated_images_all[
+            cfg.dataset]:
+        deprecated_images = deprecated_images_all[cfg.dataset][cfg.scene]
     else:
         deprecated_images = []
 
@@ -121,14 +122,13 @@ def main(cfg):
                 if valid_bag(cfg_bag, deprecated_images):
                     valid_bag_ids.append(bag_id)
                 else:
-                    continue#print (cfg_bag, 'not valid')
-            except Exception as e: 
+                    continue
+            except Exception as e:
                 print(e)
                 continue
             bag_id = bag_id + 1
             if bag_id >= _bag_num:
                 break
-                #raise RuntimeError('Ran out of bags to check out')
 
         for _bag_id in valid_bag_ids:
             print(
@@ -204,6 +204,8 @@ def main(cfg):
 
                 plt.close()
 
+            # Disable point cloud generation, since we don't use it. Keep the
+            # code around just in case.
             # if best_index != -1:
             #     colmap_points = read_points3d_binary(
             #         os.path.join(colmap_output_path, str(best_index),
@@ -249,7 +251,7 @@ def main(cfg):
             #             get_colmap_viz_folder(cfg_bag)[1],
             #             'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
             #                 _bag_size, _bag_id)))
-    print('done [{:.02f} s.]'.format(time() - t_start))
+    print('Done [{:.02f} s.]'.format(time() - t_start))
 
 
 if __name__ == '__main__':

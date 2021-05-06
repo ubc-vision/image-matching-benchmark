@@ -15,22 +15,25 @@
 import os
 import numpy as np
 
-from third_party.colmap.scripts.python.read_write_model import (qvec2rotmat,
-                                                         read_images_binary)
+from third_party.colmap.scripts.python.read_write_model import (
+    qvec2rotmat, read_images_binary)
 from utils.eval_helper import evaluate_R_t
 from utils.path_helper import (get_colmap_mark_file, get_colmap_output_path,
                                get_colmap_pose_file, get_colmap_temp_path,
                                get_data_path, get_fullpath_list,
                                parse_file_to_list, get_item_name_list)
 
+
 def valid_bag(cfg_bag, deprecated_images):
     # Get list of images
     image_path_list = get_colmap_image_path_list(cfg_bag)
     image_name_list = get_item_name_list(image_path_list)
-    # skip if bag contain deprecated image
-    if len(list(set(image_name_list) & set(deprecated_images)))!=0:
+
+    # Skip if bag contain deprecated images
+    if len(list(set(image_name_list) & set(deprecated_images))) != 0:
         return False
-    return True 
+    return True
+
 
 def is_colmap_complete(cfg):
     '''Checks if stereo evaluation is complete.'''
