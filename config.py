@@ -278,8 +278,10 @@ arg.add_argument('--json_deprecated_images',
 def validate_method(method, is_challenge, datasets):
     '''Validate method configuration passed as a JSON file.'''
     stereo_opts = {
-        Optional('use_custom_matches'): bool,
-        Optional('custom_matches_name'): And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
+        Optional('use_custom_matches'):
+        bool,
+        Optional('custom_matches_name'):
+        And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
         Optional('matcher'): {
             'method': And(str, lambda v: v in ['nn']),
             'distance': And(str,
@@ -338,8 +340,10 @@ def validate_method(method, is_challenge, datasets):
         }
     }
     mv_opts = {
-        Optional('use_custom_matches'): bool,
-        Optional('custom_matches_name'): And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
+        Optional('use_custom_matches'):
+        bool,
+        Optional('custom_matches_name'):
+        And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
         Optional('matcher'): {
             'method': And(str, lambda v: v in ['nn']),
             'distance': And(str,
@@ -378,8 +382,8 @@ def validate_method(method, is_challenge, datasets):
     for dataset in datasets:
         possible_ds[Optional(f'config_{dataset}_stereo')] = stereo_opts
         possible_ds[Optional(f'config_{dataset}_multiview')] = mv_opts
+
     # Define a dictionary schema
-    # TODO would be nice to not copy-paste for multiple datasets
     schema = Schema({
         Optional('metadata'): {
             'publish_anonymously':
@@ -404,9 +408,11 @@ def validate_method(method, is_challenge, datasets):
             str,
         },
         'config_common': {
-            'json_label': And(Use(str), lambda v: re.match("^[a-z0-9-_.]*$", v)),
+            'json_label': And(Use(str),
+                              lambda v: re.match("^[a-z0-9-_.]*$", v)),
             'keypoint': And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
-            'descriptor': And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
+            'descriptor': And(Use(str),
+                              lambda v: re.match("^[a-z0-9-.]*$", v)),
             'num_keypoints': And(int, lambda v: v > 1),
         },
         **possible_ds,
@@ -438,12 +444,20 @@ def validate_method(method, is_challenge, datasets):
 
     for dataset1 in datasets:
         for task in ['stereo', 'multiview']:
+            # Skip if the key does not exist
             cur_key = 'config_{}_{}'.format(dataset1, task)
             if cur_key not in method:
-                print('Key "{}" is empty -> skipping check'.format(cur_key))
+                print('Key "{}" is not present. Skipping check.'.format(
+                    cur_key))
                 continue
             else:
                 print('Validating key "{}"'.format(cur_key))
+
+            # But fail if it exists and is not empty. This makes packing (among
+            # other things) easier.
+            if not bool(method[cur_key]):
+                raise ValueError(
+                    'Key "{}" is empty. Please delete it.'.format(cur_key))
 
             # If dict is not empty, use_custom_matches should exist
             if method[cur_key] and (

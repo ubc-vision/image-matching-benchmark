@@ -79,10 +79,9 @@ def main(cfg):
     DATASET_LIST = ['phototourism', 'pragueparks', 'googleurban']
     for dataset in DATASET_LIST:
         # Skip if not in config
-        if ('config_{}_stereo'.format(dataset) not in method
-                and 'config_{}_multiview'.format(dataset) not in method) or (
-                    not method['config_{}_stereo'.format(dataset)]
-                    and not method['config_{}_multiview'.format(dataset)]):
+        if 'config_{}_stereo'.format(
+                dataset) not in method and 'config_{}_multiview'.format(
+                    dataset) not in method:
             continue
 
         # Create empty dictionary
