@@ -128,7 +128,8 @@ def main(cfg):
         dR = np.dot(R_2, R_1.T)
         dT = t_2 - np.dot(dR, t_1)
 
-        if cfg.dataset != 'googleurban':
+        #if cfg.dataset != 'googleurban':
+        if cfg.dataset == 'phototourism':
             kp1_int = np.round(kp1).astype(int)
             kp2_int = np.round(kp2).astype(int)
 
@@ -143,9 +144,9 @@ def main(cfg):
 
             # Project with depth
             kp1n_p, kp2n_p = get_projected_kp(kp1n, kp2n, d1, d2, dR, dT)
-            kp1_p = unnormalize_keypoints(kp1n_p, calc2['K'])
-            kp2_p = unnormalize_keypoints(kp2n_p, calc1['K'])
-
+            kp1_p = unnormalize_keypoints(kp1n_p, calc2['k'])
+            kp2_p = unnormalize_keypoints(kp2n_p, calc1['k'])
+            
             # Re-index keypoints from matches
             kp1_inl = kp1[inl[0]]
             kp2_inl = kp2[inl[1]]
@@ -169,7 +170,6 @@ def main(cfg):
             kp2n_inl_nonzero = kp2n_inl[nonzero_index]
             kp1n_p_inl_nonzero = kp1n_p_inl[nonzero_index]
             kp2n_p_inl_nonzero = kp2n_p_inl[nonzero_index]
-
             # Compute symmetric distance using the depth image
             d = get_truesym(kp1_inl_nonzero, kp2_inl_nonzero,
                             kp1_p_inl_nonzero, kp2_p_inl_nonzero)
@@ -195,7 +195,7 @@ def main(cfg):
                 fn2 + ('.png' if cfg.dataset == 'googleurban' else '.jpg')),
             margin=5,
             axis=1 if (not cfg.viz_composite_vert
-                       or cfg.dataset == 'googleurban') else 0)
+                       or cfg.dataset == 'googleurban' or cfg.dataset=='pragueparks') else 0)
 
         plt.figure(figsize=(10, 10))
         plt.imshow(im)
@@ -211,7 +211,12 @@ def main(cfg):
 
         # Plot matches
         # Points are normalized by the focals, which are on average ~670.
-        max_dist = 2e-4 if cfg.dataset == 'googleurban' else 5
+          
+        max_dist = 5
+        if cfg.dataset == 'googleurban':
+            max_dist = 2e-4 
+        if cfg.dataset == 'pragueparks':
+           max_dist = 2e-4
         cmap = matplotlib.cm.get_cmap('summer')
         order = list(range(len(d)))
         random.shuffle(order)
