@@ -128,7 +128,6 @@ def main(cfg):
         dR = np.dot(R_2, R_1.T)
         dT = t_2 - np.dot(dR, t_1)
 
-        #if cfg.dataset != 'googleurban':
         if cfg.dataset == 'phototourism':
             kp1_int = np.round(kp1).astype(int)
             kp2_int = np.round(kp2).astype(int)
@@ -144,9 +143,9 @@ def main(cfg):
 
             # Project with depth
             kp1n_p, kp2n_p = get_projected_kp(kp1n, kp2n, d1, d2, dR, dT)
-            kp1_p = unnormalize_keypoints(kp1n_p, calc2['k'])
-            kp2_p = unnormalize_keypoints(kp2n_p, calc1['k'])
-            
+            kp1_p = unnormalize_keypoints(kp1n_p, calc2['K'])
+            kp2_p = unnormalize_keypoints(kp2n_p, calc1['K'])
+
             # Re-index keypoints from matches
             kp1_inl = kp1[inl[0]]
             kp2_inl = kp2[inl[1]]
