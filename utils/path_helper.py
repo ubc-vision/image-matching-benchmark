@@ -17,6 +17,7 @@ import numpy as np
 import json
 import shortuuid
 from copy import deepcopy
+from datetime import datetime
 
 
 def generate_uuid(cfg, short=False):
@@ -83,7 +84,14 @@ def get_data_path(cfg):
 def get_base_path(cfg):
     '''Returns where the per-dataset results folder is stored.'''
 
-    return os.path.join(cfg.path_results, cfg.dataset, cfg.scene)
+    if cfg.is_challenge:
+        cur_date = '{:%Y%m%d}'.format(datetime.now())
+        return os.path.join(
+            cfg.path_results, 'challenge',
+            '{}-{}'.format(cur_date, generate_uuid(cfg, short=False)),
+            cfg.dataset, cfg.scene)
+    else:
+        return os.path.join(cfg.path_results, cfg.dataset, cfg.scene)
 
 
 def get_feature_path(cfg):
