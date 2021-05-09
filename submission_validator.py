@@ -53,7 +53,7 @@ def get_config():
     # dataset path
     parser.add_argument('--raw_data_path', type=str, default='../imw_data')
     # list of datasets
-    parser.add_argument('--datasets', nargs='+', default=['phototourism', 'ggl'])
+    parser.add_argument('--datasets', nargs='+', default=['phototourism', 'googleurban', 'pragueparks'])
     config = parser.parse_args()
     return config
 
@@ -107,6 +107,7 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 				logger.add_new_log('Submission does not contain keypoints file for {} sequence in {} dataset.'.format(seq,dataset))
 			else:
 				keypoints = load_h5(kp_path)
+
 				if sorted(list(keypoints.keys()))!=sorted(im_list):
 					logger.add_new_log('{}-{}: Keypoints file does not contain all the image keys.'.format(dataset,seq))
 				if len(list(keypoints.values())[0].shape)!=2:
@@ -172,7 +173,7 @@ def main():
 	# Unzip folder
 	submission_name = os.path.basename(config.submit_file_path).split('.')[0]
 	folder_path = os.path.dirname(config.submit_file_path)
-	# os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
+	os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
 
 	# Init Logger
 	logger = MonitorLogger(folder_path, submission_name)
