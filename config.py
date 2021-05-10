@@ -447,8 +447,8 @@ def validate_method(method, is_challenge, datasets):
             # Skip if the key does not exist
             cur_key = 'config_{}_{}'.format(dataset1, task)
             if cur_key not in method:
-                print('Key "{}" is not present. Skipping check.'.format(
-                    cur_key))
+                print(
+                    'Key "{}" is not present. Skipping check.'.format(cur_key))
                 continue
             else:
                 print('Validating key "{}"'.format(cur_key))
@@ -606,6 +606,19 @@ def validate_method(method, is_challenge, datasets):
                         raise ValueError(
                             '[{}] Cannot specify a postprocess flag for this method'
                             .format(dataset1))
+
+        # If custom matchers are enabled, the name must be the same across tasks.
+        if is_challenge:
+            key_stereo = 'config_{}_stereo'.format(dataset)
+            key_multiview = 'config_{}_multiview'.format(dataset)
+            if key_stereo in method and key_multiview in method and method[
+                    key_stereo]['use_custom_matches'] and method[
+                        key_multiview]['use_custom_matches'] and method[
+                            key_stereo]['custom_matches_name'] != method[
+                                key_multiview]['custom_matches_name']:
+                raise ValueError(
+                    'If custom matches are set for both stereo and multiview, the custom_matcher_name must match for both.'
+                )
 
 
 def get_config():

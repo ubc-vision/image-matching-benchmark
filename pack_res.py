@@ -272,6 +272,26 @@ def main(cfg):
     with open(json_dump_file, 'w') as outfile:
         json.dump(master_dict, outfile, indent=2)
 
+    # Add a short results summary.
+    print()
+    print('-- SUMMARY --')
+    print('Subset: "{}"'.format(cfg.subset))
+    for dataset in DATASET_LIST:
+        print()
+        print('Dataset "{}"'.format(dataset))
+        if dataset in master_dict:
+            # Stereo
+            if 'stereo' in  master_dict[dataset]['results']['allseq']:
+                print('-- Stereo mAA(10 deg): {:.05f}'.format(master_dict[dataset]['results']['allseq']['stereo']['run_avg']['qt_auc_10_th_0.1']['mean']))
+                for scene in master_dict[dataset]['results']:
+                    if scene != 'allseq':
+                        print('---- Scene "{}" -> Stereo mAA(10 deg): {:.05f}'.format(scene, master_dict[dataset]['results'][scene]['stereo']['run_avg']['qt_auc_10_th_0.1']['mean']))
+            if 'multiview' in  master_dict[dataset]['results']['allseq']:
+                print('-- Multiview mAA(10 deg): {:.05f}'.format(master_dict[dataset]['results']['allseq']['multiview']['run_avg']['bag_avg']['qt_auc_colmap_10']['mean']))
+                for scene in master_dict[dataset]['results']:
+                    if scene != 'allseq':
+                        print('---- Scene "{}" -> Multiview mAA(10 deg): {:.05f}'.format(scene, master_dict[dataset]['results'][scene]['multiview']['run_avg']['bag_avg']['qt_auc_colmap_10']['mean']))
+
 
 if __name__ == '__main__':
     cfg, unparsed = get_config()

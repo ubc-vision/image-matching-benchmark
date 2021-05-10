@@ -19,9 +19,25 @@ import numpy as np
 from shutil import copy
 from glob import glob
 import json
+import hashlib
 from utils.io_helper import load_json
 from utils.pack_helper import get_descriptor_properties
 from utils.path_helper import generate_uuid
+
+
+def compute_hash(filename, verbose=True):
+    cur_hash = hashlib.md5()
+
+    if not os.path.isfile(filename):
+        print('File "{}" not found: nothing to hash'.format(filename))
+        return ''
+
+    with open(filename, 'rb') as f:
+        content = f.read()
+    md5_hash.update(content)
+
+    return md5_hash.hexdigest()
+
 
 def get_kp_category(num_kp):
     '''Determine category by number of keypoints.'''
@@ -66,7 +82,6 @@ def validate_label(label):
     return label.replace('_', '-').lower()
 
 
-
 def import_features(cfg):
     '''
     Import features with the third (2020) submission format (separate files for
@@ -91,11 +106,12 @@ def import_features(cfg):
     # Retrieve stats
     print('Retrieving number of keypoints...')
     size_kp_file = []
-    for _dataset in cfg.datasets:   
+    for _dataset in cfg.datasets:
         for _seq in seqs_dict[_dataset]:
             print('--- On "{}:{}"...'.format(_dataset, _seq))
-            with h5py.File(os.path.join(cfg.path_features, _dataset, _seq, 'keypoints.h5'),
-                           'r') as f_kp:
+            with h5py.File(
+                    os.path.join(cfg.path_features, _dataset, _seq,
+                                 'keypoints.h5'), 'r') as f_kp:
                 for k in f_kp:
                     size_kp_file.append(f_kp[k].shape[0])
 
@@ -117,41 +133,54 @@ def import_features(cfg):
         print('Pre-selected number of keypoints: {}'.format(numkp))
 
     # only check descriptor size if it is provided
-    if os.path.isfile(os.path.join(cfg.path_features, cfg.datasets[0], seqs_dict[cfg.datasets[0]][0], 'descriptors.h5')):
+    if os.path.isfile(
+            os.path.join(cfg.path_features, cfg.datasets[0],
+                         seqs_dict[cfg.datasets[0]][0], 'descriptors.h5')):
         # Open a descriptors file to get their size
         print('Retrieving descriptor_size...')
         for _dataset in cfg.datasets:
             for _seq in seqs_dict[_dataset]:
                 print('--- On "{} {}"...'.format(_dataset, _seq))
                 with h5py.File(
-                        os.path.join(cfg.path_features, _dataset, _seq, 'descriptors.h5'),
-                        'r') as f_desc:
+                        os.path.join(cfg.path_features, _dataset, _seq,
+                                     'descriptors.h5'), 'r') as f_desc:
                     desc_type, desc_size, desc_nbytes = get_descriptor_properties(
                         cfg, f_desc)
                     break
                 break
             break
-        print('Descriptor type: {} {} ({} bytes)'.format(desc_size, desc_type,
-                                                         desc_nbytes))
+        print('Descriptor type: {} {} ({} bytes)'.format(
+            desc_size, desc_type, desc_nbytes))
         nbytes_category = get_desc_category(desc_nbytes)
-        print('Falling under challenge category: {} bytes'.format(nbytes_category))
+        print('Falling under challenge category: {} bytes'.format(
+            nbytes_category))
     else:
         print('Descriptor file is not given')
     # Import
     print('Importing features...')
     for _dataset in cfg.datasets:
         for _seq in seqs_dict[_dataset]:
-            print('--- On "{}: {}"...'.format(_dataset,_seq))
+            print('--- On "{}: {}"...'.format(_dataset, _seq))
 
-            fn_kp = os.path.join(cfg.path_features, _dataset, _seq, 'keypoints.h5')
-            fn_desc = os.path.join(cfg.path_features, _dataset, _seq, 'descriptors.h5')
-            fn_score = os.path.join(cfg.path_features, _dataset, _seq, 'scores.h5')
-            fn_scale = os.path.join(cfg.path_features, _dataset, _seq, 'scales.h5')
-            fn_ori = os.path.join(cfg.path_features, _dataset, _seq, 'orientations.h5')
-            fn_match = os.path.join(cfg.path_features, _dataset, _seq, 'matches.h5')
-            fn_multiview_match = os.path.join(cfg.path_features, _dataset, _seq, 'matches_multiview.h5')
-            fn_stereo_match_list = [os.path.join(cfg.path_features, _dataset, _seq,'matches_stereo_{}.h5').
-                format(idx) for idx in range(3)]
+            fn_kp = os.path.join(cfg.path_features, _dataset, _seq,
+                                 'keypoints.h5')
+            fn_desc = os.path.join(cfg.path_features, _dataset, _seq,
+                                   'descriptors.h5')
+            fn_score = os.path.join(cfg.path_features, _dataset, _seq,
+                                    'scores.h5')
+            fn_scale = os.path.join(cfg.path_features, _dataset, _seq,
+                                    'scales.h5')
+            fn_ori = os.path.join(cfg.path_features, _dataset, _seq,
+                                  'orientations.h5')
+            fn_match = os.path.join(cfg.path_features, _dataset, _seq,
+                                    'matches.h5')
+            fn_multiview_match = os.path.join(cfg.path_features, _dataset,
+                                              _seq, 'matches_multiview.h5')
+            fn_stereo_match_list = [
+                os.path.join(cfg.path_features, _dataset, _seq,
+                             'matches_stereo_{}.h5').format(idx)
+                for idx in range(3)
+            ]
 
             # create keypoints folder
             tgt_cur = os.path.join(
@@ -166,9 +195,10 @@ def import_features(cfg):
                (os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0])))):
                 # We cannot downsample the keypoints without scores
                 if numkp < max(size_kp_file) and not os.path.isfile(fn_score):
-                    raise RuntimeError('------ No scores, and subsampling is required!'
-                                       '(wanted: {}, found: {})'.format(
-                                           numkp, max(size_kp_file)))
+                    raise RuntimeError(
+                        '------ No scores, and subsampling is required!'
+                        '(wanted: {}, found: {})'.format(
+                            numkp, max(size_kp_file)))
 
                 # Import keypoints
                 print('------ Importing keypoints and descriptors')
@@ -236,9 +266,10 @@ def import_features(cfg):
 
                 # For match only submission, no downsampling is performed.
                 if numkp < max(size_kp_file):
-                    raise RuntimeError('------ number of keypoints exceeds maximum allowed limit'
-                                       '(wanted: {}, found: {})'.format(
-                                           numkp, max(size_kp_file)))
+                    raise RuntimeError(
+                        '------ number of keypoints exceeds maximum allowed limit'
+                        '(wanted: {}, found: {})'.format(
+                            numkp, max(size_kp_file)))
 
                 # copy keypoints file to raw results folder
                 copy(fn_kp, tgt_cur)
@@ -254,49 +285,68 @@ def import_features(cfg):
                     copy(fn_ori, tgt_cur)
 
                 # create match folder with match method name
-                match_folder_path = os.path.join(tgt_cur,cfg.match_name)
+                match_folder_path = os.path.join(tgt_cur, cfg.match_name)
                 if not os.path.isdir(match_folder_path):
                     os.makedirs(match_folder_path)
                 # copy match file to raw results folder
 
-                if os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0]):
-                    print('------ Multiview match file and Stereo match file are provided seperately')
+                if os.path.isfile(fn_multiview_match) and os.path.isfile(
+                        fn_stereo_match_list[0]):
+                    print(
+                        '------ Multiview match file and Stereo match file are provided seperately'
+                    )
                     fn_match = fn_multiview_match
                 else:
-                    print('------ Only one match file is provided for both stereo and multiview tasks')
+                    print(
+                        '------ Only one match file is provided for both stereo and multiview tasks'
+                    )
 
-                copy(fn_match,os.path.join(match_folder_path,'matches.h5'))
+                copy(fn_match, os.path.join(match_folder_path, 'matches.h5'))
                 # make dummy cost file
-                with h5py.File(os.path.join(match_folder_path,'matching_cost.h5'),'w') as h5_w:
+                with h5py.File(
+                        os.path.join(match_folder_path, 'matching_cost.h5'),
+                        'w') as h5_w:
                     h5_w.create_dataset('cost', data=0.0)
 
                 # create post filter folder with 'no filter'
-                filter_folder_path = os.path.join(match_folder_path,'no_filter')
+                filter_folder_path = os.path.join(match_folder_path,
+                                                  'no_filter')
                 if not os.path.isdir(filter_folder_path):
                     os.makedirs(filter_folder_path)
                 # copy match file to post filter folder
-                copy(fn_match,os.path.join(filter_folder_path,'matches_inlier.h5'))
+                copy(fn_match,
+                     os.path.join(filter_folder_path, 'matches_inlier.h5'))
                 # make dummy cost file
-                with h5py.File(os.path.join(filter_folder_path,'matches_inlier_cost.h5'),'w') as h5_w:
+                with h5py.File(
+                        os.path.join(filter_folder_path,
+                                     'matches_inlier_cost.h5'), 'w') as h5_w:
                     h5_w.create_dataset('cost', data=0.0)
 
                 # check if three stereo matches are provided
-                if all([os.path.isfile(fn_stereo_match_list[idx]) for idx in range(3)]):
+                if all([
+                        os.path.isfile(fn_stereo_match_list[idx])
+                        for idx in range(3)
+                ]):
                     print('------ Three stereo match files are provided')
                 # if only one stereo match is provided, copy it three times
                 elif os.path.isfile(fn_stereo_match_list[0]):
-                    print('------ One stereo match files is provided, copy it three times')
-                    fn_stereo_match_list = [fn_stereo_match_list[0]]*3
+                    print(
+                        '------ One stereo match files is provided, copy it three times'
+                    )
+                    fn_stereo_match_list = [fn_stereo_match_list[0]] * 3
                 # if only one match is provided for both stereo and multiview, copy it three times
                 else:
-                    fn_stereo_match_list = [fn_match]*3
+                    fn_stereo_match_list = [fn_match] * 3
 
                 for idx, fn_stereo_match in enumerate(fn_stereo_match_list):
-                    copy(fn_stereo_match,
-                        os.path.join(filter_folder_path,'matches_imported_stereo_{}.h5'.format(idx)))
+                    copy(
+                        fn_stereo_match,
+                        os.path.join(
+                            filter_folder_path,
+                            'matches_imported_stereo_{}.h5'.format(idx)))
             else:
-                raise RuntimeError('Neither descriptors nor matches are provided!')
-
+                raise RuntimeError(
+                    'Neither descriptors nor matches are provided!')
 
         # Preserved for debugging custom matches
 
@@ -335,13 +385,13 @@ def import_features(cfg):
 def str2bool(v):
     return v.lower() in ('true', '1')
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--matches_key_reverse',
-        action='store_true',
-        default=False,
-        help='reverse the image name position in match keys')
+    parser.add_argument('--matches_key_reverse',
+                        action='store_true',
+                        default=False,
+                        help='reverse the image name position in match keys')
     parser.add_argument(
         '--kp_name',
         type=str,
@@ -358,40 +408,34 @@ if __name__ == '__main__':
         default='',
         help='Name of the method used to match features, if any, '
         'lower case only')
-    parser.add_argument(
-        '--num_keypoints',
-        type=int,
-        default=-1,
-        help='Number of keypoints (-1 to use all)')
-    parser.add_argument(
-        '--path_features',
-        type=str,
-        help='Path to the features to import')
-    parser.add_argument(
-        '--datasets',
-        nargs='+',
-        default=['phototourism', 'googleurban', 'pragueparks'],
-        help='Directory holding benchmark results.')
-    parser.add_argument(
-        '--path_results',
-        type=str,
-        default='../benchmark-results',
-        help='Directory holding benchmark results.')
-    parser.add_argument(
-        '--path_json',
-        type=str,
-        default='',
-        help='Submission json file')
+    parser.add_argument('--num_keypoints',
+                        type=int,
+                        default=-1,
+                        help='Number of keypoints (-1 to use all)')
+    parser.add_argument('--path_features',
+                        type=str,
+                        help='Path to the features to import')
+    parser.add_argument('--datasets',
+                        nargs='+',
+                        default=['phototourism', 'googleurban', 'pragueparks'],
+                        help='Directory holding benchmark results.')
+    parser.add_argument('--path_results',
+                        type=str,
+                        default='../benchmark-results',
+                        help='Directory holding benchmark results.')
+    parser.add_argument('--path_json',
+                        type=str,
+                        default='',
+                        help='Submission json file')
     parser.add_argument(
         '--subset',
         type=str,
         default='both',
         help='Subset to import: "val", "test", "both" (default), "spc-fix"')
-    parser.add_argument(
-        '--is_challenge',
-        type=str2bool,
-        default=False,
-        help='Enable for challenge entries')
+    parser.add_argument('--is_challenge',
+                        type=str2bool,
+                        default=False,
+                        help='Enable for challenge entries')
 
     cfg, unparsed = parser.parse_known_args()
     if len(unparsed) > 0:
@@ -404,35 +448,76 @@ if __name__ == '__main__':
         if not cfg.desc_name:
             raise RuntimeError('Must define desc_name')
         if cfg.match_name and cfg.num_keypoints != -1:
-            raise RuntimeError('Can not crop keypoints list with a custom matcher')
+            raise RuntimeError(
+                'Can not crop keypoints list with a custom matcher')
 
         cfg.kp_name = validate_label(cfg.kp_name)
         cfg.desc_name = validate_label(cfg.desc_name)
         cfg.match_name = validate_label(cfg.match_name)
     else:
-        # read keypoints, descriptor, and match name from json 
-        method_list = load_json(cfg.path_json)
-        if len(method_list)!=1:
-            raise RuntimeError('Multiple method found in json file. Only support json fils with single method')
-        cfg.method_dict = method_list[0]
-        cfg.kp_name = cfg.method_dict['config_common']['keypoint']
-        cfg.desc_name = cfg.method_dict['config_common']['descriptor']
-        if cfg.method_dict['config_phototourism_stereo']['use_custom_matches']:
-            cfg.match_name = cfg.method_dict['config_phototourism_stereo']['custom_matches_name']
-     
+        # Compute file checksums and use them as method names. The config
+        # JSON will be re-written.
+        with open(cfg.challenge_json, 'r') as f:
+            config_file = json.loads(f)
+
+        if len(config_file) != 1:
+            raise RuntimeError(
+                'Multiple methods found in the JSON file. This is not supported for challenge submissions.'
+            )
+
+        # Get MD5 checksum for each h5py file.
+        hashes = {}
+        hashes['keypoints'] = compute_hash('{}/keypoints.h5'.format(
+            cfg.path_features))
+        hashes['descriptors'] = compute_hash('{}/descriptors.h5'.format(
+            cfg.path_features))
+        for task in ['stereo', 'multiview']:
+            cur_key = 'config_{}_{}'.format(cfg.dataset, task)
+            if cur_key in config_file and config_file[cur_key][
+                    'use_custom_matches']:
+                hashes['matches-{}-{}'.format(cfg.dataset,
+                                              task)] = compute_hash(
+                                                  '{}/matches_{}.h5'.format(
+                                                      cfg.path_features, task))
+
+        config_file['config_common']['keypoint'] = '{}-{}'.format(
+            hashes['keypoints'], config_file['config_common']['keypoint'])
+        config_file['config_common']['descriptor'] = '{}-{}'.format(
+            hashes['descriptors'], config_file['config_common']['descriptor'])
+        for task in ['stereo', 'multiview']:
+            # Without custom matches, the string will be empty
+            if hashes['matches-{}-{}'.format(cfg.dataset, task)]:
+                cur_key = 'config_{}_{}'.format(cfg.dataset, task)
+                config_file[cur_key]['custom_matches_name'] = '{}-{}'.format(
+                    hashes['matches-{}-custom'.format(cfg.dataset, task)],
+                    config_file[cur_key]['custom_matches_name'])
+        with open(cfg.challenge_json, 'w') as f:
+            json.dump(config_file, cfg.challenge_json, indent=2)
+
+        # Get keypoints, descriptor, and match name from JSON.
+        cfg.kp_name = config_file['config_common']['keypoint']
+        cfg.desc_name = config_file['config_common']['descriptor']
+        for task in ['stereo', 'multiview']:
+            if config_file['config_{}_{}'.format(dataset,
+                                                 task)]['use_custom_matches']:
+                cfg.match_name = config_file['config_{}_{}'.format(
+                    dataset, task)]['custom_matches_name']
+
     # add prefix the import path for challenge submissions
     if cfg.is_challenge:
         if cfg.path_json != '':
-            cfg.path_results = os.path.join(cfg.path_results, 'challenge',generate_uuid(cfg))
+            cfg.path_results = os.path.join(cfg.path_results, 'challenge',
+                                            generate_uuid(cfg))
         else:
-            raise RuntimeError('Must provide json file for challenge submission')
+            raise RuntimeError(
+                'Must provide json file for challenge submission')
 
     print('Processing the following datasets: {} '.format(cfg.datasets))
 
-    print('Importing {}, kp:"{}", desc="{}", matcher="{}", num_keypoints="{}" '.
-          format(cfg.datasets,
-                 cfg.kp_name, cfg.desc_name,
-                 cfg.match_name if cfg.match_name else 'N/A',
-                 cfg.num_keypoints if cfg.num_keypoints != -1 else 'N/A'))
+    print(
+        'Importing {}, kp:"{}", desc="{}", matcher="{}", num_keypoints="{}" '.
+        format(cfg.datasets, cfg.kp_name, cfg.desc_name,
+               cfg.match_name if cfg.match_name else 'N/A',
+               cfg.num_keypoints if cfg.num_keypoints != -1 else 'N/A'))
 
     import_features(cfg)

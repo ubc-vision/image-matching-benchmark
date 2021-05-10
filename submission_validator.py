@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 # IMW 2021 Submission Validator
 #
 # Submission Zip file should have folder structure as follow:
 # ├── config.json
 # ├── [Dataset 1]
-# │   ├── [Sequence 1]
+# │   ├── [Scene 1]
 # │   │   ├── keypoints.h5
 # │   │   ├── descriptors.h5
 # │   │   ├── matches.h5
-# │   ├── [Sequence 2]
+# │   ├── [Scene 2]
 # │   │   ├── ...
 # ├── [Dataset 2]
 # │   ├── ...
-# 
+#
 # In the config file, please following these nameing conventions:
-# 'keypoint', 'descriptor', and 'custom_matches_name' should only 
-# contains lowercase letters(a-z), numbers(0-9), and two special 
+# 'keypoint', 'descriptor', and 'custom_matches_name' should only
+# contains lowercase letters(a-z), numbers(0-9), and two special
 # charactors('-','.')
 # 'json_label' should only conatins above metioned charactors plus '_'
 #
@@ -40,9 +39,10 @@
 import os
 import sys
 import argparse
-from itertools import product 
+from itertools import product
 from utils.io_helper import load_h5, load_json
 from config import validate_method
+
 
 def get_config():
     parser = argparse.ArgumentParser()
@@ -53,142 +53,204 @@ def get_config():
     # dataset path
     parser.add_argument('--raw_data_path', type=str, default='../imw_data')
     # list of datasets
-    parser.add_argument('--datasets', nargs='+', default=['phototourism', 'googleurban', 'pragueparks'])
+    parser.add_argument('--datasets',
+                        nargs='+',
+                        default=['phototourism', 'googleurban', 'pragueparks'])
     config = parser.parse_args()
     return config
 
+
 class MonitorLogger():
-	def __init__(self, logger_path, value):
-		self.file = os.path.join(logger_path,'{}_log.txt'.format(value))
-		if os.path.isfile(self.file):
-			os.remove(self.file)
+    def __init__(self, logger_path, value):
+        self.file = os.path.join(logger_path, '{}_log.txt'.format(value))
+        if os.path.isfile(self.file):
+            os.remove(self.file)
 
-	def add_new_log(self, new_log):
-		with open(self.file, 'a') as f:
-			f.write(new_log + '\n')
-	def is_empty(self):
-		if os.path.isfile(self.file):
-			return False
-		else:
-			return True
-	def get_log_str(self):
-		with open(self.file, 'r') as f:
-			lines = f.readlines()
-		return ''.join(lines)	
+    def add_new_log(self, new_log):
+        with open(self.file, 'a') as f:
+            f.write(new_log + '\n')
 
-def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_path, logger):
-	for dataset in datasets:
+    def is_empty(self):
+        if os.path.isfile(self.file):
+            return False
+        else:
+            return True
 
-		raw_dataset_path = os.path.join(raw_data_path,dataset)
-		# check if dataset folder exists
-		sub_dataset_path = os.path.join(sub_path,dataset)
-		if not os.path.isdir(sub_dataset_path):
-			logger.add_new_log('Submission does not contain {} dataset.'.format(dataset))
-			continue
-		# read seqs from json
-		seqs = load_json(os.path.join(benchmark_repo_path,'json/data/{}_test.json'.format(dataset)))
-		for seq in seqs:
-			# get number of image
-			raw_seq_path = os.path.join(raw_dataset_path,seq)
-			im_list = [os.path.splitext(f)[0] for f in os.listdir(raw_seq_path) if os.path.isfile(os.path.join(raw_seq_path, f))]
-			num_im =len(im_list)
+    def get_log_str(self):
+        with open(self.file, 'r') as f:
+            lines = f.readlines()
+        return ''.join(lines)
 
-			# get all key pairs
-			key_pairs = [pair[0]+'-'+pair[1] for pair in list(product(im_list, im_list))if pair[0] > pair[1]]
 
-			# check if seq folder exists
-			sub_seq_path = os.path.join(sub_dataset_path,seq)
-			if not os.path.isdir(sub_seq_path):
-				logger.add_new_log('Submission does not contain {} sequence in {}  dataset.'.format(seq,dataset))
-				continue
-			# validate keypoints file
-			kp_path = os.path.join(sub_seq_path,'keypoints.h5')
-			if not os.path.isfile(kp_path):
-				logger.add_new_log('Submission does not contain keypoints file for {} sequence in {} dataset.'.format(seq,dataset))
-			else:
-				keypoints = load_h5(kp_path)
+def validate_submission_files(sub_path, benchmark_repo_path, datasets,
+                              raw_data_path, logger):
+    for dataset in datasets:
+        # Check if dataset folder exists
+        raw_dataset_path = os.path.join(raw_data_path, dataset)
+        sub_dataset_path = os.path.join(sub_path, dataset)
+        if not os.path.isdir(sub_dataset_path):
+            logger.add_new_log(
+                'Submission does not contain {} dataset.'.format(dataset))
+            continue
 
-				if sorted(list(keypoints.keys()))!=sorted(im_list):
-					logger.add_new_log('{}-{}: Keypoints file does not contain all the image keys.'.format(dataset,seq))
-				if len(list(keypoints.values())[0].shape)!=2:
-					logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
-				if list(keypoints.values())[0].shape[1]!=2:
-					logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
-			# validate descriptor file
-			desc_path = os.path.join(sub_seq_path,'descriptors.h5')
-			if not os.path.isfile(desc_path):
-				logger.add_new_log('Submission does not contain descriptors file for {} sequence in {}  dataset.'.format(seq,dataset))
-			else:
-				descriptors = load_h5(desc_path)
-				if sorted(list(descriptors.keys()))!=sorted(im_list):
-					logger.add_new_log('{}-{}: Descriptors file does not contain all the image keys.'.format(dataset,seq))
-				if len(list(descriptors.values())[0].shape)!=2:
-					logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))
-				if list(descriptors.values())[0].shape[1]<64 or list(descriptors.values())[0].shape[1]>2048:
-					logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))			
-			# validate match file
-			match_files = [file for file in os.listdir(sub_seq_path) if os.path.isfile(os.path.join(sub_seq_path,file)) and file.startswith('match')]	
-			for match_file in match_files:
-				matches = load_h5(os.path.join(sub_seq_path,match_file))
-				if len(matches.keys()) != len(key_pairs):
-					logger.add_new_log('{}-{}: Matches file contains worng number of keys, should have 4960 keys.'.format(dataset,seq))
-				elif sorted(list(matches.keys()))!=sorted(key_pairs):
-					logger.add_new_log('{}-{}: Matches file contains worng keys, maybe the image names is in reverse order. Plase refer to submission instruction for proper custom match key naming convention'.format(dataset,seq))
-				if len(list(matches.values())[0].shape)!=2:
-					logger.add_new_log('{}-{}: Matches file is in wrong format.'.format(dataset,seq))
-				if list(matches.values())[0].shape[0]!=2:
-					logger.add_new_log('{}-{}: Matches file is in wrong format.'.format(dataset,seq))	
+        # Read scenes from json
+        scenes = load_json(
+            os.path.join(benchmark_repo_path,
+                         'json/data/{}_test.json'.format(dataset)))
+        for scene in scenes:
+            # Get number of image
+            raw_scene_path = os.path.join(raw_dataset_path, scene)
+            im_list = [
+                os.path.splitext(f)[0] for f in os.listdir(raw_scene_path)
+                if os.path.isfile(os.path.join(raw_scene_path, f))
+            ]
+            num_im = len(im_list)
+
+            # Get all key pairs
+            key_pairs = [
+                pair[0] + '-' + pair[1]
+                for pair in list(product(im_list, im_list))
+                if pair[0] > pair[1]
+            ]
+
+            # Check if scene folder exists
+            sub_scene_path = os.path.join(sub_dataset_path, scene)
+            if not os.path.isdir(sub_scene_path):
+                logger.add_new_log(
+                    'Submission does not contain {} scene in {}  dataset.'.
+                    format(scene, dataset))
+                continue
+
+            # Validate keypoints file
+            kp_path = os.path.join(sub_scene_path, 'keypoints.h5')
+            if not os.path.isfile(kp_path):
+                logger.add_new_log(
+                    'Submission does not contain keypoints file for {} scene in {} dataset.'
+                    .format(scene, dataset))
+            else:
+                keypoints = load_h5(kp_path)
+
+                if sorted(list(keypoints.keys())) != sorted(im_list):
+                    logger.add_new_log(
+                        '{}-{}: Keypoints file does not contain all the image keys.'
+                        .format(dataset, scene))
+                if len(list(keypoints.values())[0].shape) != 2:
+                    logger.add_new_log(
+                        '{}-{}: Keypoints file is in wrong format.'.format(
+                            dataset, scene))
+                if list(keypoints.values())[0].shape[1] != 2:
+                    logger.add_new_log(
+                        '{}-{}: Keypoints file is in wrong format.'.format(
+                            dataset, scene))
+
+            # Validate descriptor file
+            desc_path = os.path.join(sub_scene_path, 'descriptors.h5')
+            if not os.path.isfile(desc_path):
+                logger.add_new_log(
+                    'Submission does not contain descriptors file for {} scene in {}  dataset.'
+                    .format(scene, dataset))
+            else:
+                descriptors = load_h5(desc_path)
+                if sorted(list(descriptors.keys())) != sorted(im_list):
+                    logger.add_new_log(
+                        '{}-{}: Descriptors file does not contain all the image keys.'
+                        .format(dataset, scene))
+                if len(list(descriptors.values())[0].shape) != 2:
+                    logger.add_new_log(
+                        '{}-{}: Descriptors file is in wrong format'.format(
+                            dataset, scene))
+                if list(descriptors.values())[0].shape[1] < 64 or list(
+                        descriptors.values())[0].shape[1] > 2048:
+                    logger.add_new_log(
+                        '{}-{}: Descriptors file is in wrong format'.format(
+                            dataset, scene))
+
+            # Validate match file
+            match_files = [
+                file for file in os.listdir(sub_scene_path)
+                if os.path.isfile(os.path.join(sub_scene_path, file))
+                and file.startswith('match')
+            ]
+            for match_file in match_files:
+                matches = load_h5(os.path.join(sub_scene_path, match_file))
+                if len(matches.keys()) != len(key_pairs):
+                    logger.add_new_log(
+                        '{}-{}: Matches file contains wrong number of keys, should have {} keys.'
+                        .format(len(key_pairs)).format(dataset, scene))
+                elif sorted(list(matches.keys())) != sorted(key_pairs):
+                    logger.add_new_log(
+                        '{}-{}: Matches file contains wrong keys, maybe the image names is in reverse order. Plase refer to submission instruction for proper custom match key naming convention'
+                        .format(dataset, scene))
+                if len(list(matches.values())[0].shape) != 2:
+                    logger.add_new_log(
+                        '{}-{}: Matches file is in wrong format.'.format(
+                            dataset, scene))
+                if list(matches.values())[0].shape[0] != 2:
+                    logger.add_new_log(
+                        '{}-{}: Matches file is in wrong format.'.format(
+                            dataset, scene))
 
 
 def validate_json(json_path, datasets, logger):
-	# check if json file exist
-	if not os.path.isfile(json_path):
-		logger.add_new_log('Submission does not contain json file')
-		return
-	# load json
-	try:
-		method_list = load_json(json_path)
-	except:
-		logger.add_new_log('Following error occurs when loading json : \n   {}'.format(sys.exc_info()))
-		return
- 
-	# validate json
-	if not type(method_list) is list:
-		logger.add_new_log('Json should contain a list of method, please refer to the example json file.')
-		return
+    # check if json file exist
+    if not os.path.isfile(json_path):
+        logger.add_new_log('The submission does not contain a JSON file')
+        return
+    # load json
+    try:
+        method_list = load_json(json_path)
+    except:
+        logger.add_new_log(
+            'The following errors occurred when loading the JSON file:\n\t{}'.
+            format(sys.exc_info()))
+        return
 
-	for i, method in enumerate(method_list):
-		print('Validating method {}/{}: "{}"'.format(
-		i + 1, len(method_list), method['config_common']['json_label']))
-		try:
-			validate_method(method, is_challenge=True, datasets=datasets)
-		except:
-			logger.add_new_log('Following error occurs when validating json : \n   {}'.format(sys.exc_info()))
-	    
+    # validate json
+    if not type(method_list) is list:
+        logger.add_new_log(
+            'The JSON file should contain a list of methods. Please refer to the examples.'
+        )
+        return
+
+    for i, method in enumerate(method_list):
+        print('Validating method {}/{}: "{}"'.format(
+            i + 1, len(method_list), method['config_common']['json_label']))
+        try:
+            validate_method(method, is_challenge=True, datasets=datasets)
+        except:
+            logger.add_new_log(
+                'The following errors occurred when validating the JSON file:\n\t{}'
+                .format(sys.exc_info()))
+
 
 def main():
 
-	config = get_config()
-	
-	# Unzip folder
-	submission_name = os.path.basename(config.submit_file_path).split('.')[0]
-	folder_path = os.path.dirname(config.submit_file_path)
-	os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
+    config = get_config()
 
-	# Init Logger
-	logger = MonitorLogger(folder_path, submission_name)
+    # Unzip folder
+    submission_name = os.path.basename(config.submit_file_path).split('.')[0]
+    folder_path = os.path.dirname(config.submit_file_path)
+    os.system('unzip {} -d {}'.format(
+        config.submit_file_path, os.path.join(folder_path, submission_name)))
 
-	# Validate Submission files
-	validate_submission_files(os.path.join(folder_path,submission_name), config.benchmark_repo_path, config.datasets, config.raw_data_path,logger)
+    # Init Logger
+    logger = MonitorLogger(folder_path, submission_name)
 
+    # Validate Submission files
+    validate_submission_files(os.path.join(folder_path, submission_name),
+                              config.benchmark_repo_path, config.datasets,
+                              config.raw_data_path, logger)
 
-	# Validate Json
-	validate_json(os.path.join(folder_path,submission_name,'config.json'), config.datasets, logger)
+    # Validate JSON
+    validate_json(os.path.join(folder_path, submission_name, 'config.json'),
+                  config.datasets, logger)
 
-	if logger.is_empty():
-		logger.add_new_log('Submission is in proper format, please submit to IMW 2021 website.')
-	else:
-		logger.add_new_log('Plase fix the above errors and rerun this script!')
+    if logger.is_empty():
+        logger.add_new_log(
+            'Submission is in proper format, please submit to IMW 2021 website.'
+        )
+    else:
+        logger.add_new_log('Plase fix the above errors and rerun this script!')
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ from utils.load_helper import load_calib, load_h5_valid_image
 
 def get_current_date():
     curr_date = datetime.datetime.now()
-    curr_date = format(curr_date.year, '04')[2:] + '-' + \
+    curr_date = format(curr_date.year, '04') + '-' + \
         format(curr_date.month, '02') + '-' + format(curr_date.day, '02')
     return curr_date
 
