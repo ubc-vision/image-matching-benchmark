@@ -88,7 +88,8 @@ def get_base_path(cfg):
         cur_date = '{:%Y%m%d}'.format(datetime.now())
         return os.path.join(
             cfg.path_results, 'challenge',
-            '{}-{}'.format(cur_date, generate_uuid(cfg, short=False)),
+            # '{}-{}'.format(cur_date, generate_uuid(cfg, short=False)),
+            generate_uuid(cfg, short=False),
             cfg.dataset, cfg.scene)
     else:
         return os.path.join(cfg.path_results, cfg.dataset, cfg.scene)
