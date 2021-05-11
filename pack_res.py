@@ -21,7 +21,8 @@ from time import time
 from config import get_config, print_usage
 from utils import pack_helper
 from utils.io_helper import load_h5, load_json
-from utils.path_helper import get_desc_file
+from utils.path_helper import get_desc_file, generate_uuid
+import random
 
 
 def main(cfg):
@@ -44,8 +45,7 @@ def main(cfg):
         master_dict['properties']['processing_date']))
 
     # Add submission flag
-    master_dict['properties'][
-        'is_submission'] = cfg.is_submission
+    master_dict['properties']['is_submission'] = cfg.is_submission
     print('Flagging as user submission: {}'.format(cfg.is_submission))
 
     # Add descriptor properties
@@ -68,11 +68,22 @@ def main(cfg):
         master_dict['properties']['descriptor_type'],
         master_dict['properties']['descriptor_nbytes']))
 
-    # get deprecated image list
-    deprecated_images_list = load_json(cfg.json_deprecated_images)
+    deprecated_images_all = load_json(cfg.json_deprecated_images)
+    if cfg.dataset in deprecated_images_all and cfg.scene in deprecated_images_all[
+            cfg.dataset]:
+        deprecated_images = deprecated_images_all[cfg.dataset][cfg.scene]
+    else:
+        deprecated_images = []
 
     # Read data and splits
-    for dataset in ['phototourism']:
+    DATASET_LIST = ['phototourism', 'pragueparks', 'googleurban']
+    for dataset in DATASET_LIST:
+        # Skip if not in config
+        if 'config_{}_stereo'.format(
+                dataset) not in method and 'config_{}_multiview'.format(
+                    dataset) not in method:
+            continue
+
         # Create empty dictionary
         master_dict[dataset] = OrderedDict()
         res_dict = OrderedDict()
@@ -96,7 +107,7 @@ def main(cfg):
         # Create empty dicts
         for scene in ['allseq'] + scene_list:
             res_dict[scene] = OrderedDict()
-            for task in ['stereo', 'multiview', 'relocalization']:
+            for task in ['stereo', 'multiview']:
                 res_dict[scene][task] = OrderedDict()
                 res_dict[scene][task]['run_avg'] = OrderedDict()
                 if task == 'multiview':
@@ -114,13 +125,6 @@ def main(cfg):
             cfg.dataset = dataset
             cfg.task = 'stereo'
             for scene in scene_list:
-
-                # get deprecated images
-                if scene in deprecated_images_list.keys():
-                    deprecated_images = deprecated_images_list[scene]
-                else:
-                    deprecated_images = []
-
                 cfg.scene = scene
 
                 res_dict[scene]['stereo']['run_avg'] = OrderedDict()
@@ -133,8 +137,9 @@ def main(cfg):
                 metric_list += ['avg_num_keypoints']
                 # metric_list += ['matching_scores_epipolar']
                 metric_list += ['num_inliers']
-                metric_list += ['matching_scores_depth_projection']
-                metric_list += ['repeatability']
+                if dataset != 'googleurban':
+                    metric_list += ['matching_scores_depth_projection']
+                    metric_list += ['repeatability']
                 metric_list += ['qt_auc']
                 metric_list += ['timings']
 
@@ -144,8 +149,9 @@ def main(cfg):
                     cur_dict = res_dict[scene]['stereo']['run_{}'.format(run)]
                     for metric in metric_list:
                         t_cur = time()
-                        getattr(pack_helper, 'compute_' + metric)(cur_dict,
-                                                                  deprecated_images, cfg)
+                        getattr(pack_helper,
+                                'compute_' + metric)(cur_dict,
+                                                     deprecated_images, cfg)
                         print(
                             ' -- Packing "{}"/"{}"/stereo, run: {}/{}, metric: {} [{:.02f} s]'
                             .format(dataset, scene, run + 1, num_runs, metric,
@@ -182,12 +188,6 @@ def main(cfg):
             cfg.task = 'multiview'
             for scene in scene_list:
                 cfg.scene = scene
-                
-                # get deprecated images
-                if scene in deprecated_images_list.keys():
-                    deprecated_images = deprecated_images_list[scene]
-                else:
-                    deprecated_images = []
 
                 for run in ['run_avg'
                             ] + ['run_{}'.format(f) for f in range(num_runs)]:
@@ -222,7 +222,11 @@ def main(cfg):
                                         time() - t_cur))
 
                         # Compute average across bags
-                        for metric in cur_dict['run_{}'.format(run)]['25bag']:
+                        any_key = random.choice([
+                            key for key in cur_dict['run_{}'.format(run)]
+                            if ('bag' in key and key != 'bag_avg')
+                        ])
+                        for metric in cur_dict['run_{}'.format(run)][any_key]:
                             pack_helper.average_multiview_over_bags(
                                 cfg, cur_dict['run_{}'.format(run)],
                                 bag_size_list)
@@ -247,21 +251,24 @@ def main(cfg):
 
             print(' -- Finished packing multiview in {:.01f} sec.'.format(
                 time() - t))
-
-            # Relocalization -- multiple runs
-            # TODO
         else:
             print('Skipping "{}/multiview"'.format(dataset))
 
+    # Add a unique identifier (equivalent to "submission id" in previous versions.
+    if cfg.is_challenge:
+        master_dict['uuid'] = generate_uuid(cfg)
+
     # Dump packed result
-    print(' -- Saving to: "{}"'.format(
-        cfg.method_dict['config_common']['json_label']))
     if not os.path.exists(cfg.path_pack):
         os.makedirs(cfg.path_pack)
+    uuid_prefix = '{}-'.format(
+        master_dict['uuid']) if cfg.is_challenge else ''
     json_dump_file = os.path.join(
         cfg.path_pack,
-        '{}.json'.format(cfg.method_dict['config_common']['json_label']))
+        '{}{}.json'.format(uuid_prefix,
+                           cfg.method_dict['config_common']['json_label']))
 
+    print(' -- Saving to: "{}"'.format(json_dump_file))
     with open(json_dump_file, 'w') as outfile:
         json.dump(master_dict, outfile, indent=2)
 

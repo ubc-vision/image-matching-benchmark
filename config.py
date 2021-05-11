@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import re
 from schema import Schema, And, Use, Optional
 
 from utils.queue_helper import get_cluster_name
@@ -128,10 +129,6 @@ arg.add_argument('--eval_multiview',
                  type=str2bool,
                  default=True,
                  help='Set to false to bypass the multiview task')
-arg.add_argument('--eval_relocalization',
-                 type=str2bool,
-                 default=True,
-                 help='Set to false to bypass the relocalization task')
 
 # Some configurations for colmap
 arg.add_argument('--colmap_min_model_size',
@@ -206,11 +203,11 @@ arg.add_argument('--num_viz_colmap_subsets_bagsize5',
                  help='Number of colmap subsets to visualize')
 arg.add_argument('--num_viz_colmap_subsets_bagsize10',
                  type=int,
-                 default=0,
+                 default=1,
                  help='Number of colmap subsets to visualize')
 arg.add_argument('--num_viz_colmap_subsets_bagsize25',
                  type=int,
-                 default=1,
+                 default=0,
                  help='Number of colmap subsets to visualize')
 arg.add_argument('--viz_composite_vert',
                  type=str2bool,
@@ -232,22 +229,14 @@ arg.add_argument('--num_runs_val_multiview',
                  type=int,
                  default=1,
                  help='Number of validation runs (multiview)')
-arg.add_argument('--num_runs_val_relocalization',
-                 type=int,
-                 default=1,
-                 help='Number of validation runs (relocalization)')
 arg.add_argument('--num_runs_test_stereo',
                  type=int,
-                 default=3,
+                 default=1,
                  help='Number of test runs (stereo)')
 arg.add_argument('--num_runs_test_multiview',
                  type=int,
-                 default=3,
-                 help='Number of test runs (multiview)')
-arg.add_argument('--num_runs_test_relocalization',
-                 type=int,
                  default=1,
-                 help='Number of test runs (relocalization)')
+                 help='Number of test runs (multiview)')
 
 # Challenge settings
 arg = add_argument_group('Challenge settings')
@@ -270,7 +259,7 @@ arg.add_argument('--run', type=str, default='', help='')
 arg.add_argument('--bag_size', type=int, default=-1, help='')
 arg.add_argument('--bag_id', type=int, default=-1, help='')
 arg.add_argument('--task', type=str, default='', help='')
-for dataset in ['phototourism']:
+for dataset in ['phototourism', 'pragueparks', 'googleurban']:
     for subset in ['val', 'test']:
         arg.add_argument('--scenes_{}_{}'.format(dataset, subset),
                          type=str,
@@ -286,11 +275,115 @@ arg.add_argument('--json_deprecated_images',
                  help="JSON file containing deprecated images")
 
 
-def validate_method(method, is_challenge):
+def validate_method(method, is_challenge, datasets):
     '''Validate method configuration passed as a JSON file.'''
+    stereo_opts = {
+        Optional('use_custom_matches'):
+        bool,
+        Optional('custom_matches_name'):
+        And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
+        Optional('matcher'): {
+            'method': And(str, lambda v: v in ['nn']),
+            'distance': And(str,
+                            lambda v: v.lower() in ['l1', 'l2', 'hamming']),
+            'flann': bool,
+            'num_nn': And(int, lambda v: v >= 1),
+            'filtering': {
+                'type':
+                And(
+                    str, lambda v: v.lower() in [
+                        'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
+                        'fginn_ratio_pairwise'
+                    ]),
+                Optional('threshold'):
+                And(Use(float), lambda v: 0 < v <= 1),
+                Optional('fginn_radius'):
+                And(Use(float), lambda v: 0 < v < 100.),
+            },
+            Optional('descriptor_distance_filter'): {
+                'threshold': And(Use(float), lambda v: v > 0),
+            },
+            'symmetric': {
+                'enabled':
+                And(bool),
+                Optional('reduce'):
+                And(str, lambda v: v.lower() in ['both', 'any']),
+            },
+        },
+        Optional('outlier_filter'): {
+            'method': And(Use(str),
+                          lambda v: v.lower() in ['none', 'cne-bp-nd']),
+        },
+        Optional('geom'): {
+            'method':
+            And(
+                str, lambda v: v.lower() in [
+                    'cv2-ransac-f', 'cv2-ransac-e', 'cv2-lmeds-f',
+                    'cv2-lmeds-e', 'cv2-7pt', 'cv2-8pt',
+                    'cv2-patched-ransac-f', 'cmp-degensac-f',
+                    'cmp-degensac-f-laf', 'cmp-gc-ransac-f',
+                    'cmp-degensac-f-laf', 'cmp-gc-ransac-f', 'cmp-magsac-f',
+                    'cmp-gc-ransac-e', 'skimage-ransac-f', 'intel-dfe-f'
+                ]),
+            Optional('threshold'):
+            And(Use(float), lambda v: v > 0),
+            Optional('confidence'):
+            And(Use(float), lambda v: v > 0),
+            Optional('max_iter'):
+            And(Use(int), lambda v: v > 0),
+            Optional('postprocess'):
+            And(Use(bool), lambda v: v is not None),
+            Optional('error_type'):
+            And(Use(str), lambda v: v.lower() in ['sampson', 'symm_epipolar']),
+            Optional('degeneracy_check'):
+            bool,
+        }
+    }
+    mv_opts = {
+        Optional('use_custom_matches'):
+        bool,
+        Optional('custom_matches_name'):
+        And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
+        Optional('matcher'): {
+            'method': And(str, lambda v: v in ['nn']),
+            'distance': And(str,
+                            lambda v: v.lower() in ['l1', 'l2', 'hamming']),
+            'flann': bool,
+            'num_nn': And(int, lambda v: v >= 1),
+            'filtering': {
+                'type':
+                And(
+                    str, lambda v: v.lower() in [
+                        'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
+                        'fginn_ratio_pairwise'
+                    ]),
+                Optional('threshold'):
+                And(Use(float), lambda v: 0 < v <= 1),
+                Optional('fginn_radius'):
+                And(Use(float), lambda v: 0 < v < 100.),
+            },
+            Optional('descriptor_distance_filter'): {
+                'threshold': And(Use(float), lambda v: v > 0),
+            },
+            'symmetric': {
+                'enabled':
+                And(bool),
+                Optional('reduce'):
+                And(str, lambda v: v.lower() in ['both', 'any']),
+            },
+        },
+        Optional('outlier_filter'): {
+            'method': And(Use(str),
+                          lambda v: v.lower() in ['none', 'cne-bp-nd']),
+        },
+        Optional('colmap'): {},
+    }
+    possible_ds = {}
+    for dataset in datasets:
+        possible_ds[Optional(f'config_{dataset}_stereo')] = stereo_opts
+        possible_ds[Optional(f'config_{dataset}_multiview')] = mv_opts
 
     # Define a dictionary schema
-    # TODO would be nice to not copy-paste for multiple datasets
     schema = Schema({
         Optional('metadata'): {
             'publish_anonymously':
@@ -315,117 +408,14 @@ def validate_method(method, is_challenge):
             str,
         },
         'config_common': {
-            'json_label': str,
-            'keypoint': And(Use(str), lambda v: '_' not in v),
-            'descriptor': And(Use(str), lambda v: '_' not in v),
+            'json_label': And(Use(str),
+                              lambda v: re.match("^[a-z0-9-_.]*$", v)),
+            'keypoint': And(Use(str), lambda v: re.match("^[a-z0-9-.]*$", v)),
+            'descriptor': And(Use(str),
+                              lambda v: re.match("^[a-z0-9-.]*$", v)),
             'num_keypoints': And(int, lambda v: v > 1),
         },
-        Optional('config_phototourism_stereo'): {
-            Optional('use_custom_matches'): bool,
-            Optional('custom_matches_name'): str,
-            Optional('matcher'): {
-                'method':
-                And(str, lambda v: v in ['nn']),
-                'distance':
-                And(str, lambda v: v.lower() in ['l1', 'l2', 'hamming']),
-                'flann':
-                bool,
-                'num_nn':
-                And(int, lambda v: v >= 1),
-                'filtering': {
-                    'type':
-                    And(
-                        str, lambda v: v.lower() in [
-                            'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
-                            'fginn_ratio_pairwise'
-                        ]),
-                    Optional('threshold'):
-                    And(Use(float), lambda v: 0 < v <= 1),
-                    Optional('fginn_radius'):
-                    And(Use(float), lambda v: 0 < v < 100.),
-                },
-                Optional('descriptor_distance_filter'): {
-                    'threshold': And(Use(float), lambda v: v > 0),
-                },
-                'symmetric': {
-                    'enabled':
-                    And(bool),
-                    Optional('reduce'):
-                    And(str, lambda v: v.lower() in ['both', 'any']),
-                },
-            },
-            Optional('outlier_filter'): {
-                'method':
-                And(Use(str), lambda v: v.lower() in ['none', 'cne-bp-nd']),
-            },
-            Optional('geom'): {
-                'method':
-                And(
-                    str, lambda v: v.lower() in [
-                        'cv2-ransac-f', 'cv2-ransac-e', 'cv2-lmeds-f',
-                        'cv2-lmeds-e', 'cv2-7pt', 'cv2-8pt',
-                        'cv2-patched-ransac-f', 'cmp-degensac-f',
-                        'cmp-degensac-f-laf', 'cmp-gc-ransac-f',
-                        'cmp-degensac-f-laf', 'cmp-gc-ransac-f',
-                        'cmp-magsac-f', 'cmp-gc-ransac-e', 'skimage-ransac-f',
-                        'intel-dfe-f'
-                    ]),
-                Optional('threshold'):
-                And(Use(float), lambda v: v > 0),
-                Optional('confidence'):
-                And(Use(float), lambda v: v > 0),
-                Optional('max_iter'):
-                And(Use(int), lambda v: v > 0),
-                Optional('postprocess'):
-                And(Use(bool), lambda v: v is not None),
-                Optional('error_type'):
-                And(Use(str),
-                    lambda v: v.lower() in ['sampson', 'symm_epipolar']),
-                Optional('degeneracy_check'):
-                bool,
-            }
-        },
-        Optional('config_phototourism_multiview'): {
-            Optional('use_custom_matches'): bool,
-            Optional('custom_matches_name'): str,
-            Optional('matcher'): {
-                'method':
-                And(str, lambda v: v in ['nn']),
-                'distance':
-                And(str, lambda v: v.lower() in ['l1', 'l2', 'hamming']),
-                'flann':
-                bool,
-                'num_nn':
-                And(int, lambda v: v >= 1),
-                'filtering': {
-                    'type':
-                    And(
-                        str, lambda v: v.lower() in [
-                            'none', 'snn_ratio_pairwise', 'snn_ratio_vs_last',
-                            'fginn_ratio_pairwise'
-                        ]),
-                    Optional('threshold'):
-                    And(Use(float), lambda v: 0 < v <= 1),
-                    Optional('fginn_radius'):
-                    And(Use(float), lambda v: 0 < v < 100.),
-                },
-                Optional('descriptor_distance_filter'): {
-                    'threshold': And(Use(float), lambda v: v > 0),
-                },
-                'symmetric': {
-                    'enabled':
-                    And(bool),
-                    Optional('reduce'):
-                    And(str, lambda v: v.lower() in ['both', 'any']),
-                },
-            },
-            Optional('outlier_filter'): {
-                'method':
-                And(Use(str), lambda v: v.lower() in ['none', 'cne-bp-nd']),
-            },
-            Optional('colmap'): {},
-        },
-        Optional('config_phototourism_relocalization'): {},
+        **possible_ds,
     })
 
     schema.validate(method)
@@ -434,32 +424,40 @@ def validate_method(method, is_challenge):
     if is_challenge and not method['metadata']:
         raise ValueError('Must specify metadata')
 
-    # Check what we are running
-    do_pt_stereo = False if 'config_phototourism_stereo' not in method \
-            else bool(method['config_phototourism_stereo'])
-    do_pt_multiview = False if 'config_phototourism_multiview' not in method \
-            else bool(method['config_phototourism_multiview'])
-    do_pt_relocalization = False if 'config_phototourism_relocalization' not \
-            in method else bool(method['config_phototourism_relocalization'])
-
-    if do_pt_stereo:
-        print('Running: Phototourism, stereo track')
-    if do_pt_multiview:
-        print('Running: Phototourism, multiview track')
-    if do_pt_relocalization:
-        print('Running: Phototourism, relocalization track')
-    if not any([do_pt_stereo, do_pt_multiview, do_pt_relocalization]):
+    # Check for incorrect, missing, or redundant options
+    do_any_task = False
+    print(datasets)
+    for cur_dataset in datasets:
+        do_stereo = 'config_{}_stereo'.format(
+            cur_dataset) in method and method['config_{}_stereo'.format(
+                cur_dataset)]
+        do_multiview = 'config_{}_multiview'.format(
+            cur_dataset) in method and method['config_{}_multiview'.format(
+                cur_dataset)]
+        if do_stereo:
+            print('Running: {}, stereo track'.format(cur_dataset))
+        if do_multiview:
+            print('Running: {}, multiview track'.format(cur_dataset))
+        do_any_task = do_any_task or do_stereo or do_multiview
+    if not do_any_task:
         raise ValueError('No tasks were specified')
 
-    # Check for incorrect, missing, or redundant options
-    for dataset in ['phototourism']:
-        for task in ['stereo', 'multiview', 'relocalization']:
-            cur_key = 'config_{}_{}'.format(dataset, task)
+    for dataset1 in datasets:
+        for task in ['stereo', 'multiview']:
+            # Skip if the key does not exist
+            cur_key = 'config_{}_{}'.format(dataset1, task)
             if cur_key not in method:
-                print('Key "{}" is empty -> skipping check'.format(cur_key))
+                print('Key "{}" is not present. Skipping check.'.format(
+                    cur_key))
                 continue
             else:
                 print('Validating key "{}"'.format(cur_key))
+
+            # But fail if it exists and is not empty. This makes packing (among
+            # other things) easier.
+            if not bool(method[cur_key]):
+                raise ValueError(
+                    'Key "{}" is empty. Please delete it.'.format(cur_key))
 
             # If dict is not empty, use_custom_matches should exist
             if method[cur_key] and (
@@ -483,23 +481,23 @@ def validate_method(method, is_challenge):
                         matcher['symmetric']:
                     raise ValueError(
                         '[{}/{}] Must specify "reduce" if "symmetric" is enabled'
-                        .format(dataset, task))
+                        .format(dataset1, task))
 
                 # Check for redundant settings with custom matches
-                if 'config_{}_stereo'.format(dataset) in method:
-                    cur_config = method['config_{}_stereo'.format(dataset)]
+                if 'config_{}_stereo'.format(dataset1) in method:
+                    cur_config = method['config_{}_stereo'.format(dataset1)]
                     if cur_config['use_custom_matches']:
                         if 'matcher' in cur_config or 'outlier_filter' in cur_config \
                                 or 'geom' in cur_config:
                             raise ValueError(
                                 '[{}/stereo] Found redundant settings with use_custom_matches=True'
-                                .format(dataset))
+                                .format(dataset1))
                     else:
                         if 'matcher' not in cur_config or 'outlier_filter' not in \
                                 cur_config or 'geom' not in cur_config:
                             raise ValueError(
                                 '[{}/stereo] Missing required settings with use_custom_matches=False'
-                                .format(dataset))
+                                .format(dataset1))
 
                     if cur_config['use_custom_matches']:
                         if 'matcher' in cur_config or 'outlier_filter' in cur_config \
@@ -510,9 +508,9 @@ def validate_method(method, is_challenge):
 
             # For stereo, check also geom
             if task == 'stereo' and \
-                    'config_{}_stereo'.format(dataset) in method and \
-                    'geom' in method['config_{}_stereo'.format(dataset)]:
-                geom = method['config_{}_stereo'.format(dataset)]['geom']
+                    'config_{}_stereo'.format(dataset1) in method and \
+                    'geom' in method['config_{}_stereo'.format(dataset1)]:
+                geom = method['config_{}_stereo'.format(dataset1)]['geom']
 
                 # Threshold for RANSAC
                 if geom['method'].lower() in [
@@ -524,12 +522,12 @@ def validate_method(method, is_challenge):
                     if 'threshold' not in geom:
                         raise ValueError(
                             '[{}] Must specify a threshold for this method'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'threshold' in geom:
                         raise ValueError(
                             '[{}] Cannot specify a threshold for this method'.
-                            format(dataset))
+                            format(dataset1))
 
                 # Degeneracy check for RANSAC
                 if geom['method'].lower() in [
@@ -538,20 +536,20 @@ def validate_method(method, is_challenge):
                     if 'degeneracy_check' not in geom:
                         raise ValueError(
                             '[{}] Must indicate degeneracy check for this method'
-                            .format(dataset))
+                            .format(dataset1))
                     if 'error_type' not in geom:
                         raise ValueError(
                             '[{}] Must indicate error type for this method'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'degeneracy_check' in geom:
                         raise ValueError(
                             '[{}] Cannot apply degeneracy check to this method'
-                            .format(dataset))
+                            .format(dataset1))
                     if 'error_type' in geom:
                         raise ValueError(
                             '[{}] Cannot indicate error type for this method'.
-                            format(dataset))
+                            format(dataset1))
 
                 # Confidence for RANSAC/LMEDS
                 if geom['method'].lower() in [
@@ -570,12 +568,12 @@ def validate_method(method, is_challenge):
                     if 'confidence' not in geom:
                         raise ValueError(
                             '[{}] Must specify a confidence value for OpenCV or DEGENSAC'
-                            .format(dataset))
+                            .format(dataset1))
                 else:
                     if 'confidence' in geom:
                         raise ValueError(
                             '[{}] Cannot specify a confidence value for this method'
-                            .format(dataset))
+                            .format(dataset1))
 
                 # Maximum number of RANSAC iterations
                 if geom['method'].lower() in [
@@ -590,24 +588,24 @@ def validate_method(method, is_challenge):
                     if 'max_iter' not in geom:
                         raise ValueError(
                             '[{}] Must indicate max_iter for this method'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'max_iter' in geom:
                         raise ValueError(
                             '[{}] Cannot indicate max_iter for this method'.
-                            format(dataset))
+                            format(dataset1))
 
                 # DFE-specific
                 if geom['method'].lower() in ['intel-dfe-f']:
                     if 'postprocess' not in geom:
                         raise ValueError(
                             '[{}] Must specify a postprocess flag for DFE'.
-                            format(dataset))
+                            format(dataset1))
                 else:
                     if 'postprocess' in geom:
                         raise ValueError(
                             '[{}] Cannot specify a postprocess flag for this method'
-                            .format(dataset))
+                            .format(dataset1))
 
 
 def get_config():
@@ -628,16 +626,14 @@ def get_config():
         cfg.path_pack = 'packed-debug'
 
     # Overwrite deprecated images json path -- unless already overwritten
-    # TODO: This is a bit fragile -- fix it next time around
     if not cfg.json_deprecated_images:
         cfg.json_deprecated_images = 'json/deprecated_images.json'
 
     # Enforce challenge settings
-    if cfg.is_challenge:
-        if cfg.num_runs_test_stereo != 3 or \
-                cfg.num_runs_test_multiview != 3 or \
-                cfg.num_runs_test_relocalization != 3:
-            raise ValueError('Violating pre-set runs on challenge mode!')
+    # if cfg.is_challenge:
+    #     if cfg.num_runs_test_stereo != 3 or \
+    #        cfg.num_runs_test_multiview != 3:
+    #         raise ValueError('Violating pre-set runs on challenge mode!')
 
     # "Ignore" walltime on Google Cloud Compute and change some defaults
     if get_cluster_name() == 'gcp' and cfg.run_mode == 'batch':

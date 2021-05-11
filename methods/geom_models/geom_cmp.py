@@ -19,17 +19,17 @@ import math
 try:
     import pydegensac as pyransac
 except Exception:
-    print('WARNING: Could not import pyransac')
+    # print('WARNING: Could not import pyransac')
     pass
 try:
     import pygcransac
 except Exception:
-    print('WARNING: Could not import pygcransac')
+    # print('WARNING: Could not import pygcransac')
     pass
 try:
     import pymagsac
 except Exception:
-    print('WARNING: Could not import pymagsac')
+    # print('WARNING: Could not import pymagsac')
     pass
 
 from utils.stereo_helper import normalize_keypoints

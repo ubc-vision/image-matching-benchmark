@@ -14,6 +14,19 @@
 
 import os
 import numpy as np
+import json
+import shortuuid
+from copy import deepcopy
+from datetime import datetime
+
+
+def generate_uuid(cfg, short=False):
+    # Ignore metadata
+    opts = deepcopy(cfg.method_dict)
+    opts['metadata'] = {}
+    opts_str = json.dumps(opts)
+    uuid = shortuuid.uuid(opts_str)
+    return uuid if not short else uuid[:8]
 
 
 def get_eval_path(mode, cfg):
@@ -71,7 +84,15 @@ def get_data_path(cfg):
 def get_base_path(cfg):
     '''Returns where the per-dataset results folder is stored.'''
 
-    return os.path.join(cfg.path_results, cfg.dataset, cfg.scene)
+    if cfg.is_challenge:
+        cur_date = '{:%Y%m%d}'.format(datetime.now())
+        return os.path.join(
+            cfg.path_results, 'challenge',
+            # '{}-{}'.format(cur_date, generate_uuid(cfg, short=False)),
+            generate_uuid(cfg, short=False),
+            cfg.dataset, cfg.scene)
+    else:
+        return os.path.join(cfg.path_results, cfg.dataset, cfg.scene)
 
 
 def get_feature_path(cfg):
@@ -222,6 +243,12 @@ def get_match_file(cfg):
     return os.path.join(get_match_path(cfg), 'matches.h5')
 
 
+def get_filter_match_file(cfg):
+    '''Returns the path to the match file after pre-filtering.'''
+
+    return os.path.join(get_filter_path(cfg), 'matches.h5')
+
+
 def get_match_cost_file(cfg):
     '''Returns the path to the match file.'''
 
@@ -241,9 +268,9 @@ def get_geom_name(cfg):
     if method == 'cv2-patched-ransac-f':
         label = '_'.join([
             method, 'th',
-            str(geom['threshold']),
-            'conf', str(geom['confidence']),
-            'maxiter', str(geom['max_iter'])
+            str(geom['threshold']), 'conf',
+            str(geom['confidence']), 'maxiter',
+            str(geom['max_iter'])
         ])
     elif method in ['cv2-ransac-e', 'cv2-ransac-f']:
         label = '_'.join([
@@ -312,13 +339,15 @@ def get_geom_cost_file(cfg):
 def get_cne_temp_path(cfg):
     return os.path.join(get_filter_path(cfg), 'temp_cne')
 
+
 def get_filter_match_file_for_computing_model(cfg):
-    filter_match_file = os.path.join(get_filter_path(cfg), 
-        'matches_imported_stereo_{}.h5'.format(cfg.run))
+    filter_match_file = os.path.join(
+        get_filter_path(cfg), 'matches_imported_stereo_{}.h5'.format(cfg.run))
     if os.path.isfile(filter_match_file):
         return filter_match_file
     else:
         return get_filter_match_file(cfg)
+
 
 def get_filter_match_file(cfg):
     return os.path.join(get_filter_path(cfg), 'matches_inlier.h5')
@@ -414,11 +443,13 @@ def get_colmap_path(cfg):
                         'bag_size_{}'.format(cfg.bag_size),
                         'bag_id_{:05d}'.format(cfg.bag_id))
 
+
 def get_multiview_path(cfg):
     '''Returns the path to multiview folder.'''
 
     return os.path.join(get_filter_path(cfg),
                         'multiview-fold-{}'.format(cfg.run))
+
 
 def get_colmap_mark_file(cfg):
     '''Returns the path to colmap flag.'''
@@ -497,8 +528,12 @@ def get_item_name_list(fullpath_list):
 def get_stereo_viz_folder(cfg):
     '''Returns the path to the stereo visualizations folder.'''
 
-    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
-                        cfg.dataset, cfg.scene, 'stereo')
+    uuid_prefix = '{}-'.format(generate_uuid(
+        cfg, short=True)) if cfg.is_challenge else ''
+    base = os.path.join(
+        '{}{}'.format(uuid_prefix,
+                      cfg.method_dict['config_common']['json_label'].lower()),
+        cfg.dataset, cfg.scene, 'stereo')
 
     return os.path.join(cfg.path_visualization, 'png', base), \
            os.path.join(cfg.path_visualization, 'jpg', base)
@@ -507,28 +542,10 @@ def get_stereo_viz_folder(cfg):
 def get_colmap_viz_folder(cfg):
     '''Returns the path to the multiview visualizations folder.'''
 
-    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
-                        cfg.dataset, cfg.scene, 'multiview')
-
-    return os.path.join(cfg.path_visualization, 'png', base), \
-           os.path.join(cfg.path_visualization, 'jpg', base)
-
-
-def get_stereo_viz_folder_debug(cfg):
-    '''Returns the path to the stereo visualizations folder.'''
-
-    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
-                        cfg.dataset, cfg.scene, 'stereo')
-
-    return os.path.join(cfg.path_visualization + '-debug', 'png', base), \
-           os.path.join(cfg.path_visualization + '-debug', 'jpg', base)
-
-
-def get_colmap_viz_folder_debug(cfg):
-    '''Returns the path to the multiview visualizations folder.'''
-
-    base = os.path.join(cfg.method_dict['config_common']['json_label'].lower(),
-                        cfg.dataset, cfg.scene, 'multiview')
+    base = os.path.join(
+        '{}-{}'.format(generate_uuid(cfg, short=True),
+                       cfg.method_dict['config_common']['json_label'].lower()),
+        cfg.dataset, cfg.scene, 'multiview')
 
     return os.path.join(cfg.path_visualization, 'png', base), \
            os.path.join(cfg.path_visualization, 'jpg', base)

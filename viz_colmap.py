@@ -48,9 +48,10 @@ def main(cfg):
     bag_size_num = [b['num_in_bag'] for b in bag_size_json]
 
     # Load deprecated images list
-    deprecated_images_list = load_json(cfg.json_deprecated_images)
-    if cfg.scene in deprecated_images_list.keys():
-        deprecated_images = deprecated_images_list[cfg.scene]
+    deprecated_images_all = load_json(cfg.json_deprecated_images)
+    if cfg.scene in deprecated_images_all and cfg.scene in deprecated_images_all[
+            cfg.dataset]:
+        deprecated_images = deprecated_images_all[cfg.dataset][cfg.scene]
     else:
         deprecated_images = []
 
@@ -100,6 +101,8 @@ def main(cfg):
 
     # Load keypoints
     keypoints_dict = load_h5(get_kp_file(cfg))
+    #print ("bag_size_num, bag_size_list")
+    #print (bag_size_num, bag_size_list)
 
     # Loop over bag sizes
     for _bag_num, _bag_size in zip(bag_size_num, bag_size_list):
@@ -112,12 +115,20 @@ def main(cfg):
         valid_bag_ids = []
         bag_id = 0
         while len(valid_bag_ids) < num_bags:
-            cfg_bag.bag_id = bag_id
-            if valid_bag(cfg_bag, deprecated_images):
-                valid_bag_ids.append(bag_id)
-            bag_id = bag_id + 1
             if bag_id == _bag_num:
                 raise RuntimeError('Ran out of bags to check out')
+            cfg_bag.bag_id = bag_id
+            try:
+                if valid_bag(cfg_bag, deprecated_images):
+                    valid_bag_ids.append(bag_id)
+                else:
+                    continue
+            except Exception as e:
+                print(e)
+                continue
+            bag_id = bag_id + 1
+            if bag_id >= _bag_num:
+                break
 
         for _bag_id in valid_bag_ids:
             print(
@@ -193,49 +204,54 @@ def main(cfg):
 
                 plt.close()
 
-            if best_index != -1:
-                colmap_points = read_points3d_binary(
-                    os.path.join(colmap_output_path, str(best_index),
-                                 'points3D.bin'))
-                points3d = []
-                for k in colmap_points:
-                    points3d.append([
-                        colmap_points[k].xyz[0], colmap_points[k].xyz[1],
-                        colmap_points[k].xyz[2]
-                    ])
-                points3d = np.array(points3d)
-                points3d -= np.median(points3d, axis=0)[None, ...]
-                points3d /= np.abs(points3d).max() + 1e-6
-                pcd = os.path.join(
-                    get_colmap_viz_folder(cfg_bag)[0],
-                    'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
-                        _bag_size, _bag_id))
-                with open(pcd, 'w') as f:
-                    f.write('# .PCD v.7 - Point Cloud Data file format\n')
-                    f.write('VERSION .7\n')
-                    f.write('FIELDS x y z\n')
-                    f.write('SIZE 4 4 4\n')
-                    f.write('TYPE F F F\n')
-                    f.write('COUNT 1 1 1\n')
-                    f.write('WIDTH {}\n'.format(len(colmap_points)))
-                    f.write('HEIGHT 1\n')
-                    f.write('VIEWPOINT 0 0 0 1 0 0 0\n')
-                    f.write('POINTS {}\n'.format(len(colmap_points)))
-                    f.write('DATA ascii\n')
-                    for p in points3d:
-                        f.write('{:.05f} {:.05f} {:.05f}\n'.format(
-                            p[0], p[1], p[2]))
-                copyfile(
-                    os.path.join(
-                        get_colmap_viz_folder(cfg_bag)[0],
-                        'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
-                            _bag_size, _bag_id)),
-                    os.path.join(
-                        get_colmap_viz_folder(cfg_bag)[1],
-                        'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
-                            _bag_size, _bag_id)))
-
-    print('done [{:.02f} s.]'.format(time() - t_start))
+            # Disable point cloud generation, since we don't use it. Keep the
+            # code around just in case.
+            # if best_index != -1:
+            #     colmap_points = read_points3d_binary(
+            #         os.path.join(colmap_output_path, str(best_index),
+            #                      'points3D.bin'))
+            #     points3d = []
+            #     for k in colmap_points:
+            #         points3d.append([
+            #             colmap_points[k].xyz[0], colmap_points[k].xyz[1],
+            #             colmap_points[k].xyz[2]
+            #         ])
+            #     try:
+            #         points3d = np.array(points3d)
+            #         points3d -= np.median(points3d, axis=0)[None, ...]
+            #         points3d /= np.abs(points3d).max() + 1e-6
+            #     except:
+            #         import IPython
+            #         IPython.embed()
+            #     pcd = os.path.join(
+            #         get_colmap_viz_folder(cfg_bag)[0],
+            #         'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
+            #             _bag_size, _bag_id))
+            #     with open(pcd, 'w') as f:
+            #         f.write('# .PCD v.7 - Point Cloud Data file format\n')
+            #         f.write('VERSION .7\n')
+            #         f.write('FIELDS x y z\n')
+            #         f.write('SIZE 4 4 4\n')
+            #         f.write('TYPE F F F\n')
+            #         f.write('COUNT 1 1 1\n')
+            #         f.write('WIDTH {}\n'.format(len(colmap_points)))
+            #         f.write('HEIGHT 1\n')
+            #         f.write('VIEWPOINT 0 0 0 1 0 0 0\n')
+            #         f.write('POINTS {}\n'.format(len(colmap_points)))
+            #         f.write('DATA ascii\n')
+            #         for p in points3d:
+            #             f.write('{:.05f} {:.05f} {:.05f}\n'.format(
+            #                 p[0], p[1], p[2]))
+            #     copyfile(
+            #         os.path.join(
+            #             get_colmap_viz_folder(cfg_bag)[0],
+            #             'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
+            #                 _bag_size, _bag_id)),
+            #         os.path.join(
+            #             get_colmap_viz_folder(cfg_bag)[1],
+            #             'colmap-bagsize{:d}-bag{:02d}.pcd'.format(
+            #                 _bag_size, _bag_id)))
+    print('Done [{:.02f} s.]'.format(time() - t_start))
 
 
 if __name__ == '__main__':

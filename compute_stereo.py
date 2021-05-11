@@ -69,7 +69,8 @@ def main(cfg):
     # Load visiblity and images
     images_list = get_fullpath_list(data_dir, 'images')
     vis_list = get_fullpath_list(data_dir, 'visibility')
-    depth_maps_list = get_fullpath_list(data_dir, 'depth_maps')
+    if cfg.dataset != 'googleurban':
+        depth_maps_list = get_fullpath_list(data_dir, 'depth_maps')
     image_names = get_item_name_list(images_list)
 
     # Load camera information
@@ -92,16 +93,17 @@ def main(cfg):
 
     result = Parallel(n_jobs=num_cores)(delayed(compute_stereo_metrics_from_E)(
         images_list[image_names.index(pair.split('-')[0])], images_list[
-            image_names.index(pair.split('-')[1])], depth_maps_list[
-                image_names.index(pair.split('-')[0])], depth_maps_list[
-                    image_names.index(pair.split('-')[1])],
+            image_names.index(pair.split('-')[1])],
+        depth_maps_list[image_names.index(pair.split('-')[0])] if cfg.
+        dataset != 'googleurban' else None, depth_maps_list[image_names.index(
+            pair.split('-')[1])] if cfg.dataset != 'googleurban' else None,
         np.asarray(keypoints_dict[pair.split('-')[0]]),
         np.asarray(keypoints_dict[pair.split('-')[1]]), calib_dict[pair.split(
             '-')[0]], calib_dict[pair.split('-')
                                  [1]], geom_dict[pair], matches_dict[pair],
         filter_matches_dict[pair], geom_inl_dict[pair], cfg)
                                         for pair in tqdm(pairs_per_th['0.0']))
-    
+
     # Convert previous visibility list to strings
     old_keys = []
     for pair in pairs:
@@ -118,12 +120,18 @@ def main(cfg):
     for i in range(len(result)):
         if all_keys[i] in old_keys:
             if result[i][5]:
-                geo_s_dict_pre_match[all_keys[i]] = result[i][0][0]
-                geo_s_dict_refined_match[all_keys[i]] = result[i][0][1]
-                geo_s_dict_final_match[all_keys[i]] = result[i][0][2]
-                true_s_dict_pre_match[all_keys[i]] = result[i][1][0]
-                true_s_dict_refined_match[all_keys[i]] = result[i][1][1]
-                true_s_dict_final_match[all_keys[i]] = result[i][1][2]
+                geo_s_dict_pre_match[
+                    all_keys[i]] = result[i][0][0] if result[i][0] else None
+                geo_s_dict_refined_match[
+                    all_keys[i]] = result[i][0][1] if result[i][0] else None
+                geo_s_dict_final_match[
+                    all_keys[i]] = result[i][0][2] if result[i][0] else None
+                true_s_dict_pre_match[
+                    all_keys[i]] = result[i][1][0] if result[i][1] else None
+                true_s_dict_refined_match[
+                    all_keys[i]] = result[i][1][1] if result[i][1] else None
+                true_s_dict_final_match[
+                    all_keys[i]] = result[i][1][2] if result[i][1] else None
                 err_q = result[i][2]
                 err_t = result[i][3]
                 rep_s_dict[all_keys[i]] = result[i][4]
@@ -146,15 +154,22 @@ def main(cfg):
         for i in range(len(all_keys)):
             if len(cur_pairs) > 0 and all_keys[i] in cur_pairs:
                 if result[i][5]:
-                    _geo_s_dict_pre_match[all_keys[i]] = result[i][0][0]
-                    _geo_s_dict_refined_match[all_keys[i]] = result[i][0][1]
-                    _geo_s_dict_final_match[all_keys[i]] = result[i][0][2]
-                    _true_s_dict_pre_match[all_keys[i]] = result[i][1][0]
-                    _true_s_dict_refined_match[all_keys[i]] = result[i][1][1]
-                    _true_s_dict_final_match[all_keys[i]] = result[i][1][2]
+                    _geo_s_dict_pre_match[all_keys[
+                        i]] = result[i][0][0] if result[i][0] else None
+                    _geo_s_dict_refined_match[all_keys[
+                        i]] = result[i][0][1] if result[i][0] else None
+                    _geo_s_dict_final_match[all_keys[
+                        i]] = result[i][0][2] if result[i][0] else None
+                    _true_s_dict_pre_match[all_keys[
+                        i]] = result[i][1][0] if result[i][1] else None
+                    _true_s_dict_refined_match[all_keys[
+                        i]] = result[i][1][1] if result[i][1] else None
+                    _true_s_dict_final_match[all_keys[
+                        i]] = result[i][1][2] if result[i][1] else None
                     err_q = result[i][2]
                     err_t = result[i][3]
-                    _rep_s_dict[all_keys[i]] = result[i][4]
+                    _rep_s_dict[
+                        all_keys[i]] = result[i][4] if result[i][4] else None
                     _err_dict[all_keys[i]] = [err_q, err_t]
         geo_s_dict_pre_match_th[th] = _geo_s_dict_pre_match
         geo_s_dict_refined_match_th[th] = _geo_s_dict_refined_match
@@ -172,37 +187,38 @@ def main(cfg):
         os.makedirs(get_stereo_path(cfg))
 
     # Finally, save packed scores and errors
+    if cfg.dataset != 'googleurban':
+        save_h5(geo_s_dict_pre_match, get_stereo_epipolar_pre_match_file(cfg))
+        save_h5(geo_s_dict_refined_match,
+                get_stereo_epipolar_refined_match_file(cfg))
+        save_h5(geo_s_dict_final_match,
+                get_stereo_epipolar_final_match_file(cfg))
 
-    save_h5(geo_s_dict_pre_match, get_stereo_epipolar_pre_match_file(cfg))
-    save_h5(geo_s_dict_refined_match,
-            get_stereo_epipolar_refined_match_file(cfg))
-    save_h5(geo_s_dict_final_match, get_stereo_epipolar_final_match_file(cfg))
-
-    save_h5(true_s_dict_pre_match,
-            get_stereo_depth_projection_pre_match_file(cfg))
-    save_h5(true_s_dict_refined_match,
-            get_stereo_depth_projection_refined_match_file(cfg))
-    save_h5(true_s_dict_final_match,
-            get_stereo_depth_projection_final_match_file(cfg))
-
+        save_h5(true_s_dict_pre_match,
+                get_stereo_depth_projection_pre_match_file(cfg))
+        save_h5(true_s_dict_refined_match,
+                get_stereo_depth_projection_refined_match_file(cfg))
+        save_h5(true_s_dict_final_match,
+                get_stereo_depth_projection_final_match_file(cfg))
+        save_h5(rep_s_dict, get_repeatability_score_file(cfg))
     save_h5(err_dict, get_stereo_pose_file(cfg))
-    save_h5(rep_s_dict, get_repeatability_score_file(cfg))
-    for th in pairs_per_th:
-        save_h5(geo_s_dict_pre_match_th[th],
-                get_stereo_epipolar_pre_match_file(cfg, th))
-        save_h5(geo_s_dict_refined_match_th[th],
-                get_stereo_epipolar_refined_match_file(cfg, th))
-        save_h5(geo_s_dict_final_match_th[th],
-                get_stereo_epipolar_final_match_file(cfg, th))
 
-        save_h5(true_s_dict_pre_match_th[th],
-                get_stereo_depth_projection_pre_match_file(cfg, th))
-        save_h5(true_s_dict_refined_match_th[th],
-                get_stereo_depth_projection_refined_match_file(cfg, th))
-        save_h5(true_s_dict_final_match_th[th],
-                get_stereo_depth_projection_final_match_file(cfg, th))
+    for th in pairs_per_th:
+        if cfg.dataset != 'googleurban':
+            save_h5(geo_s_dict_pre_match_th[th],
+                    get_stereo_epipolar_pre_match_file(cfg, th))
+            save_h5(geo_s_dict_refined_match_th[th],
+                    get_stereo_epipolar_refined_match_file(cfg, th))
+            save_h5(geo_s_dict_final_match_th[th],
+                    get_stereo_epipolar_final_match_file(cfg, th))
+            save_h5(true_s_dict_pre_match_th[th],
+                    get_stereo_depth_projection_pre_match_file(cfg, th))
+            save_h5(true_s_dict_refined_match_th[th],
+                    get_stereo_depth_projection_refined_match_file(cfg, th))
+            save_h5(true_s_dict_final_match_th[th],
+                    get_stereo_depth_projection_final_match_file(cfg, th))
+            save_h5(rep_s_dict_th[th], get_repeatability_score_file(cfg, th))
         save_h5(err_dict_th[th], get_stereo_pose_file(cfg, th))
-        save_h5(rep_s_dict_th[th], get_repeatability_score_file(cfg, th))
 
 
 if __name__ == '__main__':
