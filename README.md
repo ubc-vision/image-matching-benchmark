@@ -82,6 +82,16 @@ You can then create an environment with all dependencies. We provide examples fo
 conda env create -f system/<your_choice>.yml
 ```
 
+Alternatively, if you are experiencing library conflicts, you can use this series of install commands, used to create conda_end_dm.yml:
+
+```bash
+conda create -n sfm python=3.7
+conda activate sfm
+conda install -c conda-forge opencv==4.5.2 scipy matplotlib
+conda install h5py joblib tqdm 
+pip install schema shortuuid jsmin pydegensac
+``` 
+
 Colmap should be installed separately, and its binaries be visible in the system path. You can follow [this documentation](https://colmap.github.io/install.html).
 
 For stereo, we provide wrappers around OpenCV RANSAC, which is far from the state of the art ([examples](https://github.com/opencv/opencv/pull/16498#issue-370691424)). We also provide wrappers around GC-RANSAC, DEGENSAC and MAGSAC. Note that you may not need any of these if you want to provide a final set of matches directly, bypassing standard robust estimators. You can install them into your conda environment as follows.
