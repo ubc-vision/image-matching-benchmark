@@ -189,9 +189,9 @@ def import_features(cfg):
                     with h5py.File(fn_score, 'r') as h5_r, \
                             h5py.File(os.path.join(tgt_cur, 'scores.h5'), 'w') as h5_w:
                         for k in h5_r:
-                            sorted_indices = np.argsort(h5_r[k])[::-1]
+                            sorted_indices = np.argsort(h5_r[k].value.reshape(-1))[::-1]
                             subsampled_indices[k] = sorted_indices[:min(
-                                h5_r[k].size, numkp)].reshape(-1)
+                                h5_r[k].size, numkp)]
                             crop = h5_r[k].value[subsampled_indices[k]]
                             h5_w[k] = crop
                     with h5py.File(fn_kp, 'r') as h5_r, \
