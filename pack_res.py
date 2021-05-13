@@ -21,7 +21,7 @@ from time import time
 from config import get_config, print_usage
 from utils import pack_helper
 from utils.io_helper import load_h5, load_json
-from utils.path_helper import get_desc_file, generate_uuid
+from utils.path_helper import get_desc_file, get_uuid
 import random
 
 
@@ -256,7 +256,7 @@ def main(cfg):
 
     # Add a unique identifier (equivalent to "submission id" in previous versions.
     if cfg.is_challenge:
-        master_dict['uuid'] = generate_uuid(cfg)
+        master_dict['uuid'] = get_uuid(cfg)
 
     # Dump packed result
     if not os.path.exists(cfg.path_pack):

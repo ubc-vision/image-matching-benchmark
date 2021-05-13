@@ -20,13 +20,8 @@ from copy import deepcopy
 from datetime import datetime
 
 
-def generate_uuid(cfg, short=False):
-    # Ignore metadata
-    opts = deepcopy(cfg.method_dict)
-    opts['metadata'] = {}
-    opts_str = json.dumps(opts)
-    uuid = shortuuid.uuid(opts_str)
-    return uuid if not short else uuid[:8]
+def get_uuid(cfg):
+    return cfg.method_dict['config_common']['json_label'].split('-')[0]
 
 
 def get_eval_path(mode, cfg):
@@ -88,8 +83,7 @@ def get_base_path(cfg):
         cur_date = '{:%Y%m%d}'.format(datetime.now())
         return os.path.join(
             cfg.path_results, 'challenge',
-            # '{}-{}'.format(cur_date, generate_uuid(cfg, short=False)),
-            generate_uuid(cfg, short=False),
+            get_uuid(cfg),
             cfg.dataset, cfg.scene)
     else:
         return os.path.join(cfg.path_results, cfg.dataset, cfg.scene)
@@ -528,8 +522,8 @@ def get_item_name_list(fullpath_list):
 def get_stereo_viz_folder(cfg):
     '''Returns the path to the stereo visualizations folder.'''
 
-    uuid_prefix = '{}-'.format(generate_uuid(
-        cfg, short=True)) if cfg.is_challenge else ''
+    uuid_prefix = '{}-'.format(get_uuid(
+        cfg)) if cfg.is_challenge else ''
     base = os.path.join(
         '{}{}'.format(uuid_prefix,
                       cfg.method_dict['config_common']['json_label'].lower()),
@@ -543,7 +537,7 @@ def get_colmap_viz_folder(cfg):
     '''Returns the path to the multiview visualizations folder.'''
 
     base = os.path.join(
-        '{}-{}'.format(generate_uuid(cfg, short=True),
+        '{}-{}'.format(get_uuid(cfg),
                        cfg.method_dict['config_common']['json_label'].lower()),
         cfg.dataset, cfg.scene, 'multiview')
 

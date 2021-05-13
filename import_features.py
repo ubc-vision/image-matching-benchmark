@@ -19,9 +19,29 @@ import numpy as np
 from shutil import copy
 from glob import glob
 import json
+import hashlib
+import re
 from utils.io_helper import load_json
 from utils.pack_helper import get_descriptor_properties
-from utils.path_helper import generate_uuid
+
+def hash_folder(folder_path):
+    hash = hashlib.md5()
+    hash = get_hash_list(folder_path,hash)
+    return hash.hexdigest()[:16]
+
+def get_hash_list(folder_path,hash):
+
+    files = [os.path.join(folder_path,f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path,f))]
+    dirs = [os.path.join(folder_path,f) for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path,f))]
+
+    for _file in sorted(files):
+        if _file.endswith('.h5') or _file.endswith('.json'): 
+            with open(_file, 'rb') as fp:
+                hash.update(fp.read())
+    for _dir in sorted(dirs):
+        hash = get_hash_list(_dir,hash)
+
+    return hash
 
 def get_kp_category(num_kp):
     '''Determine category by number of keypoints.'''
@@ -66,6 +86,15 @@ def validate_label(label):
     return label.replace('_', '-').lower()
 
 
+def add_hash_prfix(path_json,hash_str):
+    with open(path_json,'r') as f:
+        lines = f.readlines()
+        for idx, line in enumerate(lines):
+            if 'json_label' in line:
+                lines[idx] = re.sub('"(?P<w1>.*?)"(?P<w2>[^"]+)"(?P<w3>.*?)"', '"\g<w1>"\g<w2>"{}-\g<w3>"'.format(hash_str), line)
+
+    with open(path_json, 'w') as f:
+        f.writelines(lines)
 
 def import_features(cfg):
     '''
@@ -399,6 +428,8 @@ if __name__ == '__main__':
         exit(-1)
 
     if cfg.path_json == '':
+        if cfg.is_challenge:
+            raise RuntimeError('Must provide json file for challenge submission')
         if not cfg.kp_name:
             raise RuntimeError('Must define kp_name')
         if not cfg.desc_name:
@@ -420,12 +451,13 @@ if __name__ == '__main__':
         if cfg.method_dict['config_phototourism_stereo']['use_custom_matches']:
             cfg.match_name = cfg.method_dict['config_phototourism_stereo']['custom_matches_name']
      
-    # add prefix the import path for challenge submissions
     if cfg.is_challenge:
-        if cfg.path_json != '':
-            cfg.path_results = os.path.join(cfg.path_results, 'challenge',generate_uuid(cfg))
-        else:
-            raise RuntimeError('Must provide json file for challenge submission')
+        hash_str = hash_folder(cfg.path_features)
+        # add hash prefix to import path for challenge submissions
+        cfg.path_results = os.path.join(cfg.path_results, 'challenge', hash_str)
+        # add hash prefix to json label
+        add_hash_prfix(cfg.path_json, hash_str)
+
 
     print('Processing the following datasets: {} '.format(cfg.datasets))
 
