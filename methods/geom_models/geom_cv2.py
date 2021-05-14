@@ -94,18 +94,41 @@ def _cv2_estimate_E_without_intrinsics(cfg, matches, kps1, kps2, calib1,
     # (We set them to -1 when not applicable as OpenCV complains otherwise)
     cur_key = 'config_{}_{}'.format(cfg.dataset, cfg.task)
     geom = cfg.method_dict[cur_key]['geom']
-    if geom['method'].lower() in ['cv2-ransac-f', 'cv2-patched-ransac-f']:
+    if geom['method'].lower() in ['cv2-ransac-f']:
         min_matches = 8
         cv_method = 'FM_RANSAC'
         cv_reprojection_threshold = geom['threshold']
         cv_confidence = geom['confidence']
-        if geom['method'].lower() == 'cv2-patched-ransac-f':
-            cv_max_iter = geom['max_iter']
+        cv_max_iter = geom['max_iter']
     elif geom['method'].lower() == 'cv2-lmeds-f':
         min_matches = 8
         cv_method = 'FM_LMEDS'
         cv_reprojection_threshold = -1
         cv_confidence = geom['confidence']
+    elif geom['method'].lower() == 'cv2-usacdef-f':
+        min_matches = 8
+        cv_method = 'USAC_DEFAULT'
+        cv_reprojection_threshold = geom['confidence']
+        cv_confidence = geom['confidence']
+        cv_max_iter = geom['max_iter']
+    elif geom['method'].lower() == 'cv2-usacmagsac-f':
+        min_matches = 8
+        cv_method = 'USAC_MAGSAC'
+        cv_reprojection_threshold = geom['confidence']
+        cv_confidence = geom['confidence']
+        cv_max_iter = geom['max_iter']
+    elif geom['method'].lower() == 'cv2-usacfast-f':
+        min_matches = 8
+        cv_method = 'USAC_FAST'
+        cv_reprojection_threshold = geom['confidence']
+        cv_confidence = geom['confidence']
+        cv_max_iter = geom['max_iter']
+    elif geom['method'].lower() == 'cv2-usacaccurate-f':
+        min_matches = 8
+        cv_method = 'USAC_ACCURATE'
+        cv_reprojection_threshold = geom['confidence']
+        cv_confidence = geom['confidence']
+        cv_max_iter = geom['max_iter']
     elif geom['method'].lower() == 'cv2-7pt':
         # This should actually be *equal* to 7? We'll probably never use it...
         min_matches = 7
@@ -126,8 +149,7 @@ def _cv2_estimate_E_without_intrinsics(cfg, matches, kps1, kps2, calib1,
 
     cv2.setRNGSeed(cfg.opencv_seed)
 
-    # Temporary fix to allow for patched opencv
-    if geom['method'].lower() == 'cv2-patched-ransac-f':
+    if geom['method'].lower() not in ['cv2-8pt', 'cv2-7pt', 'cv2-lmeds-f']:
         F, mask_F = cv2.findFundamentalMat(
             kp1,
             kp2,
