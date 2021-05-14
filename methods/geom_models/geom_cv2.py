@@ -108,25 +108,25 @@ def _cv2_estimate_E_without_intrinsics(cfg, matches, kps1, kps2, calib1,
     elif geom['method'].lower() == 'cv2-usacdef-f':
         min_matches = 8
         cv_method = 'USAC_DEFAULT'
-        cv_reprojection_threshold = geom['confidence']
+        cv_reprojection_threshold = geom['threshold']
         cv_confidence = geom['confidence']
         cv_max_iter = geom['max_iter']
     elif geom['method'].lower() == 'cv2-usacmagsac-f':
         min_matches = 8
         cv_method = 'USAC_MAGSAC'
-        cv_reprojection_threshold = geom['confidence']
+        cv_reprojection_threshold = geom['threshold']
         cv_confidence = geom['confidence']
         cv_max_iter = geom['max_iter']
     elif geom['method'].lower() == 'cv2-usacfast-f':
         min_matches = 8
         cv_method = 'USAC_FAST'
-        cv_reprojection_threshold = geom['confidence']
+        cv_reprojection_threshold = geom['threshold']
         cv_confidence = geom['confidence']
         cv_max_iter = geom['max_iter']
     elif geom['method'].lower() == 'cv2-usacaccurate-f':
         min_matches = 8
         cv_method = 'USAC_ACCURATE'
-        cv_reprojection_threshold = geom['confidence']
+        cv_reprojection_threshold = geom['threshold']
         cv_confidence = geom['confidence']
         cv_max_iter = geom['max_iter']
     elif geom['method'].lower() == 'cv2-7pt':
