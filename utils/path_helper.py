@@ -259,7 +259,7 @@ def get_geom_name(cfg):
     method = geom['method'].lower()
 
     # This entry is a temporary fix
-    if method in= ['cv2-ransac-f', 'cv2-usacdef-f',
+    if method in ['cv2-ransac-f', 'cv2-usacdef-f',
                    'cv2-usacmagsac-f',
                    'cv2-usacfast-f',
                    'cv2-usacaccurate-f']:
