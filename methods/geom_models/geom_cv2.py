@@ -227,7 +227,11 @@ def estimate_essential(cfg,
         return _cv2_estimate_E_with_intrinsics(cfg, matches, kps1, kps2,
                                                calib1, calib2)
     elif method in [
-            'cv2-ransac-f', 'cv2-patched-ransac-f', 'cv2-lmeds-f', 'cv2-7pt',
+            'cv2-ransac-f', 'cv2-usacdef-f',
+                   'cv2-usacmagsac-f',
+                   'cv2-usacfast-f',
+                   'cv2-usacaccurate-f',
+             'cv2-lmeds-f', 'cv2-7pt',
             'cv2-8pt'
     ]:
         return _cv2_estimate_E_without_intrinsics(cfg, matches, kps1, kps2,

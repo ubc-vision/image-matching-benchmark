@@ -587,7 +587,7 @@ def validate_method(method, is_challenge, datasets):
 
                 # Maximum number of RANSAC iterations
                 if geom['method'].lower() in [
-                        'cv2-patched-ransac-f',
+                        'cv2-ransac-f',
                         'cv2-usacdef-f',
                         'cv2-usacmagsac-f',
                         'cv2-usacfast-f',
