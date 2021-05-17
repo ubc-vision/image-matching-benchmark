@@ -35,7 +35,7 @@ def get_hash_list(folder_path,hash):
     dirs = [os.path.join(folder_path,f) for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path,f))]
 
     for _file in sorted(files):
-        if _file.endswith('.h5') or _file.endswith('.json'): 
+        if _file.endswith('.h5'): 
             with open(_file, 'rb') as fp:
                 hash.update(fp.read())
     for _dir in sorted(dirs):
@@ -91,7 +91,8 @@ def add_hash_prfix(path_json,hash_str):
         lines = f.readlines()
         for idx, line in enumerate(lines):
             if 'json_label' in line:
-                lines[idx] = re.sub('"(?P<w1>.*?)"(?P<w2>[^"]+)"(?P<w3>.*?)"', '"\g<w1>"\g<w2>"{}-\g<w3>"'.format(hash_str), line)
+                if not hash_str in line:
+                    lines[idx] = re.sub('"(?P<w1>.*?)"(?P<w2>[^"]+)"(?P<w3>.*?)"', '"\g<w1>"\g<w2>"{}-\g<w3>"'.format(hash_str), line)
 
     with open(path_json, 'w') as f:
         f.writelines(lines)
