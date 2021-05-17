@@ -320,8 +320,11 @@ def validate_method(method, is_challenge, datasets):
                 str, lambda v: v.lower() in [
                     'cv2-ransac-f', 'cv2-ransac-e', 'cv2-lmeds-f',
                     'cv2-lmeds-e', 'cv2-7pt', 'cv2-8pt',
-                    'cv2-patched-ransac-f', 'cmp-degensac-f',
-                    'cmp-degensac-f-laf', 'cmp-gc-ransac-f',
+                    'cv2-usacdef-f',
+                    'cv2-usacmagsac-f',
+                    'cv2-usacfast-f',
+                    'cv2-usacaccurate-f',
+                    'cmp-degensac-f',
                     'cmp-degensac-f-laf', 'cmp-gc-ransac-f', 'cmp-magsac-f',
                     'cmp-gc-ransac-e', 'skimage-ransac-f', 'intel-dfe-f'
                 ]),
@@ -514,7 +517,11 @@ def validate_method(method, is_challenge, datasets):
 
                 # Threshold for RANSAC
                 if geom['method'].lower() in [
-                        'cv2-ransac-f', 'cv2-ransac-e', 'cv2-patched-ransac-f',
+                        'cv2-ransac-f', 'cv2-ransac-e', 
+                    'cv2-usacdef-f',
+                    'cv2-usacmagsac-f',
+                    'cv2-usacfast-f',
+                    'cv2-usacaccurate-f',
                         'cmp-degensac-f', 'cmp-gc-ransac-f', 'cmp-gc-ransac-e',
                         'cmp-degensac-f-laf', 'cmp-magsac-f',
                         'skimage-ransac-f', 'intel-dfe-f'
@@ -554,7 +561,10 @@ def validate_method(method, is_challenge, datasets):
                 # Confidence for RANSAC/LMEDS
                 if geom['method'].lower() in [
                         'cv2-ransac-f',
-                        'cv2-patched-ransac-f',
+                    'cv2-usacdef-f',
+                    'cv2-usacmagsac-f',
+                    'cv2-usacfast-f',
+                    'cv2-usacaccurate-f',
                         'cv2-ransac-e',
                         'cv2-lmeds-f',
                         'cv2-lmeds-e',
@@ -577,7 +587,11 @@ def validate_method(method, is_challenge, datasets):
 
                 # Maximum number of RANSAC iterations
                 if geom['method'].lower() in [
-                        'cv2-patched-ransac-f',
+                        'cv2-ransac-f',
+                        'cv2-usacdef-f',
+                        'cv2-usacmagsac-f',
+                        'cv2-usacfast-f',
+                        'cv2-usacaccurate-f',
                         'cmp-degensac-f',
                         'cmp-degensac-f-laf',
                         'cmp-gc-ransac-f',

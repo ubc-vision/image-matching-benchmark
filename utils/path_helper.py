@@ -259,14 +259,17 @@ def get_geom_name(cfg):
     method = geom['method'].lower()
 
     # This entry is a temporary fix
-    if method == 'cv2-patched-ransac-f':
+    if method in ['cv2-ransac-f', 'cv2-usacdef-f',
+                   'cv2-usacmagsac-f',
+                   'cv2-usacfast-f',
+                   'cv2-usacaccurate-f']:
         label = '_'.join([
             method, 'th',
             str(geom['threshold']), 'conf',
             str(geom['confidence']), 'maxiter',
             str(geom['max_iter'])
         ])
-    elif method in ['cv2-ransac-e', 'cv2-ransac-f']:
+    elif method in ['cv2-ransac-e']:
         label = '_'.join([
             method,
             'th',
