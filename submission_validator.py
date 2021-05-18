@@ -43,6 +43,7 @@ import argparse
 from itertools import product 
 from utils.io_helper import load_h5, load_json
 from config import validate_method
+from utils.pack_helper import get_descriptor_properties
 
 def get_config():
     parser = argparse.ArgumentParser()
@@ -114,18 +115,28 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 					logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
 				if list(keypoints.values())[0].shape[1]!=2:
 					logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
+				# check number of keypoints
+				if list(keypoints.values())[0].shape[0] > 8000:
+					logger.add_new_log('{}-{}: Keypoints file contains more than 8000 points.'.format(dataset,seq))
 			# validate descriptor file
 			desc_path = os.path.join(sub_seq_path,'descriptors.h5')
 			if not os.path.isfile(desc_path):
 				logger.add_new_log('Submission does not contain descriptors file for {} sequence in {}  dataset.'.format(seq,dataset))
 			else:
 				descriptors = load_h5(desc_path)
+				
 				if sorted(list(descriptors.keys()))!=sorted(im_list):
 					logger.add_new_log('{}-{}: Descriptors file does not contain all the image keys.'.format(dataset,seq))
 				if len(list(descriptors.values())[0].shape)!=2:
 					logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))
 				if list(descriptors.values())[0].shape[1]<64 or list(descriptors.values())[0].shape[1]>2048:
-					logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))			
+					logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))
+				
+				# check descriptor size
+				desc_type, desc_size, desc_nbytes = get_descriptor_properties({},descriptors)
+				if desc_nbytes > 512:
+					logger.add_new_log('{}-{}: Descriptors size is larger than 512 bytes'.format(dataset,seq))
+
 			# validate match file
 			match_files = [file for file in os.listdir(sub_seq_path) if os.path.isfile(os.path.join(sub_seq_path,file)) and file.startswith('match')]	
 			for match_file in match_files:
