@@ -76,6 +76,8 @@ class MonitorLogger():
 		with open(self.file, 'r') as f:
 			lines = f.readlines()
 		return ''.join(lines)	
+	def get_file_path(self):
+		return self.file
 
 def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_path, logger):
 	for dataset in datasets:
@@ -198,8 +200,10 @@ def main():
 
 	if logger.is_empty():
 		logger.add_new_log('Submission is in proper format, please submit to IMW 2021 website.')
+		print('--------\nSubmission is in proper format, please submit to IMW 2021 website.\n--------')
 	else:
 		logger.add_new_log('Plase fix the above errors and rerun this script!')
+		print('--------\nPlase fix the errors in log file before submitting!\n{}\n--------'.format(logger.get_file_path()))
 
 
 if __name__ == "__main__":
