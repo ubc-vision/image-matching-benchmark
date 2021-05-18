@@ -21,6 +21,7 @@ from glob import glob
 import json
 import hashlib
 import re
+import itertools
 from utils.io_helper import load_json
 from utils.pack_helper import get_descriptor_properties
 
@@ -284,46 +285,60 @@ def import_features(cfg):
                     copy(fn_ori, tgt_cur)
 
                 # create match folder with match method name
-                match_folder_path = os.path.join(tgt_cur,cfg.match_name)
-                if not os.path.isdir(match_folder_path):
-                    os.makedirs(match_folder_path)
+                if isinstance(cfg.match_name,dict):
+                    # hardcode task names!
+                    multiview_match_folder_path = os.path.join(tgt_cur,cfg.match_name[_dataset+'_multiview'])
+                    stereo_match_folder_path = os.path.join(tgt_cur,cfg.match_name[_dataset+'_stereo'])                         
+                else:
+                    multiview_match_folder_path = os.path.join(tgt_cur,cfg.match_name)
+                    stereo_match_folder_path = os.path.join(tgt_cur,cfg.match_name)                          
+                if not os.path.isdir(multiview_match_folder_path):
+                    os.makedirs(multiview_match_folder_path)
+                if not os.path.isdir(stereo_match_folder_path):
+                    os.makedirs(stereo_match_folder_path)
+                
                 # copy match file to raw results folder
-
                 if os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0]):
                     print('------ Multiview match file and Stereo match file are provided seperately')
-                    fn_match = fn_multiview_match
+                    if not os.path.isfile(fn_stereo_match_list[1]):
+                        print('------ Only one stereo match file is provided, copy it three times')
+                        fn_stereo_match_list = [fn_stereo_match_list[0]]*3
+                    else:
+                        print('------ Three stereo match files are provided')
                 else:
                     print('------ Only one match file is provided for both stereo and multiview tasks')
+                    fn_multiview_match = fn_match
+                    fn_stereo_match_list = [fn_match]*3
+                copy(fn_multiview_match,os.path.join(multiview_match_folder_path,'matches.h5'))
+                copy(fn_stereo_match_list[0],os.path.join(stereo_match_folder_path,'matches.h5'))
 
-                copy(fn_match,os.path.join(match_folder_path,'matches.h5'))
                 # make dummy cost file
-                with h5py.File(os.path.join(match_folder_path,'matching_cost.h5'),'w') as h5_w:
+                with h5py.File(os.path.join(multiview_match_folder_path,'matching_cost.h5'),'w') as h5_w:
+                    h5_w.create_dataset('cost', data=0.0)
+                with h5py.File(os.path.join(stereo_match_folder_path,'matching_cost.h5'),'w') as h5_w:
                     h5_w.create_dataset('cost', data=0.0)
 
                 # create post filter folder with 'no filter'
-                filter_folder_path = os.path.join(match_folder_path,'no_filter')
-                if not os.path.isdir(filter_folder_path):
-                    os.makedirs(filter_folder_path)
-                # copy match file to post filter folder
-                copy(fn_match,os.path.join(filter_folder_path,'matches_inlier.h5'))
-                # make dummy cost file
-                with h5py.File(os.path.join(filter_folder_path,'matches_inlier_cost.h5'),'w') as h5_w:
-                    h5_w.create_dataset('cost', data=0.0)
+                stereo_filter_folder_path = os.path.join(stereo_match_folder_path,'no_filter')
+                if not os.path.isdir(stereo_filter_folder_path):
+                    os.makedirs(stereo_filter_folder_path)
+                multiview_filter_folder_path = os.path.join(multiview_match_folder_path,'no_filter')
+                if not os.path.isdir(multiview_filter_folder_path):
+                    os.makedirs(multiview_filter_folder_path)
 
-                # check if three stereo matches are provided
-                if all([os.path.isfile(fn_stereo_match_list[idx]) for idx in range(3)]):
-                    print('------ Three stereo match files are provided')
-                # if only one stereo match is provided, copy it three times
-                elif os.path.isfile(fn_stereo_match_list[0]):
-                    print('------ One stereo match files is provided, copy it three times')
-                    fn_stereo_match_list = [fn_stereo_match_list[0]]*3
-                # if only one match is provided for both stereo and multiview, copy it three times
-                else:
-                    fn_stereo_match_list = [fn_match]*3
+                # copy match file to post filter folder
+                copy(fn_multiview_match,os.path.join(multiview_filter_folder_path,'matches_inlier.h5'))
+                copy(fn_stereo_match_list[0],os.path.join(stereo_filter_folder_path,'matches_inlier.h5'))
+                
+                # make dummy cost file
+                with h5py.File(os.path.join(stereo_filter_folder_path,'matches_inlier_cost.h5'),'w') as h5_w:
+                    h5_w.create_dataset('cost', data=0.0)
+                with h5py.File(os.path.join(multiview_filter_folder_path,'matches_inlier_cost.h5'),'w') as h5_w:
+                    h5_w.create_dataset('cost', data=0.0)
 
                 for idx, fn_stereo_match in enumerate(fn_stereo_match_list):
                     copy(fn_stereo_match,
-                        os.path.join(filter_folder_path,'matches_imported_stereo_{}.h5'.format(idx)))
+                        os.path.join(stereo_filter_folder_path,'matches_imported_stereo_{}.h5'.format(idx)))
             else:
                 raise RuntimeError('Neither descriptors nor matches are provided!')
 
@@ -401,7 +416,12 @@ if __name__ == '__main__':
         '--datasets',
         nargs='+',
         default=['phototourism', 'googleurban', 'pragueparks'],
-        help='Directory holding benchmark results.')
+        help='List of datasets')
+    parser.add_argument(
+        '--tasks',
+        default=['stereo','multiview'],
+        help='List of tasks'
+        )
     parser.add_argument(
         '--path_results',
         type=str,
@@ -450,7 +470,12 @@ if __name__ == '__main__':
         cfg.kp_name = cfg.method_dict['config_common']['keypoint']
         cfg.desc_name = cfg.method_dict['config_common']['descriptor']
         if cfg.method_dict['config_phototourism_stereo']['use_custom_matches']:
-            cfg.match_name = cfg.method_dict['config_phototourism_stereo']['custom_matches_name']
+            cfg.match_name = {}
+            for data_task in itertools.product(cfg.datasets, cfg.tasks):
+                key = data_task[0]+'_'+data_task[1]
+                cfg.match_name[key] = cfg.method_dict['config_'+key]['custom_matches_name']
+
+            
      
     if cfg.is_challenge:
         hash_str = hash_folder(cfg.path_features)
@@ -462,10 +487,16 @@ if __name__ == '__main__':
 
     print('Processing the following datasets: {} '.format(cfg.datasets))
 
+    if isinstance(cfg.match_name,dict):
+        match_name_str = 'custom match'
+    elif cfg.match_name:
+        match_name_str = cfg.match_name
+    else:
+        match_name_str = 'N/A'
     print('Importing {}, kp:"{}", desc="{}", matcher="{}", num_keypoints="{}" '.
           format(cfg.datasets,
                  cfg.kp_name, cfg.desc_name,
-                 cfg.match_name if cfg.match_name else 'N/A',
+                 match_name_str,
                  cfg.num_keypoints if cfg.num_keypoints != -1 else 'N/A'))
 
     import_features(cfg)
