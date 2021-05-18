@@ -261,12 +261,9 @@ def main(cfg):
     # Dump packed result
     if not os.path.exists(cfg.path_pack):
         os.makedirs(cfg.path_pack)
-    uuid_prefix = '{}-'.format(
-        master_dict['uuid']) if cfg.is_challenge else ''
     json_dump_file = os.path.join(
         cfg.path_pack,
-        '{}{}.json'.format(uuid_prefix,
-                           cfg.method_dict['config_common']['json_label']))
+        '{}.json'.format(cfg.method_dict['config_common']['json_label']))
 
     print(' -- Saving to: "{}"'.format(json_dump_file))
     with open(json_dump_file, 'w') as outfile:
