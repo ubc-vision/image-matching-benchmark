@@ -120,10 +120,18 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 				# check number of keypoints
 				if list(keypoints.values())[0].shape[0] > 8000:
 					logger.add_new_log('{}-{}: Keypoints file contains more than 8000 points.'.format(dataset,seq))
+			
+			# check if match file exists first
+			match_files = [file for file in os.listdir(sub_seq_path) if os.path.isfile(os.path.join(sub_seq_path,file)) and file.startswith('match')]	
+			
 			# validate descriptor file
 			desc_path = os.path.join(sub_seq_path,'descriptors.h5')
-			if not os.path.isfile(desc_path):
+
+			# much provide either descriptor file or match file 
+			if not os.path.isfile(desc_path) and len(match_files)==0:
 				logger.add_new_log('Submission does not contain descriptors file for {} sequence in {}  dataset.'.format(seq,dataset))
+			elif not os.path.isfile(desc_path):
+				pass
 			else:
 				descriptors = load_h5(desc_path)
 				
@@ -136,12 +144,10 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 				
 				# check descriptor size
 				desc_type, desc_size, desc_nbytes = get_descriptor_properties({},descriptors)
-				if desc_nbytes > 512:
-					logger.add_new_log('{}-{}: Descriptors size is larger than 512 bytes'.format(dataset,seq))
+				if desc_nbytes > 512 and len(match_files)==0:
+					logger.add_new_log('{}-{}: Descriptors size is larger than 512 bytes, you need to provide custom match file'.format(dataset,seq))
 
 			# validate match file
-			match_files = [file for file in os.listdir(sub_seq_path) if os.path.isfile(os.path.join(sub_seq_path,file)) and file.startswith('match')]	
-			
 			# check match file name
 			if 'matches.h5' in match_files:
 				if len(match_files) != 1:
