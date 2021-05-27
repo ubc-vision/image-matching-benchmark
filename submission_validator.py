@@ -205,7 +205,7 @@ def main():
 	# Unzip folder
 	submission_name = os.path.basename(config.submit_file_path).split('.')[0]
 	folder_path = os.path.dirname(config.submit_file_path)
-	#os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
+	os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
 
 	# Init Logger
 	logger = MonitorLogger(folder_path, submission_name)
