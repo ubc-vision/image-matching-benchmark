@@ -162,8 +162,8 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 
 			for match_file in match_files:
 				matches = load_h5(os.path.join(sub_seq_path,match_file))
-                                if len(matches.keys()) != len(key_pairs):
-                                        logger.add_new_log('{}-{}: Matches file contains wrong number of keys, should have {} keys, have {}.'.format(dataset,seq, len(key_pairs), len(matches.keys())))
+				if len(matches.keys()) != len(key_pairs):
+					logger.add_new_log('{}-{}: Matches file contains wrong number of keys, should have {} keys, have {}.'.format(dataset,seq, len(key_pairs), len(matches.keys())))
 				elif sorted(list(matches.keys()))!=sorted(key_pairs):
 					logger.add_new_log('{}-{}: Matches file contains worng keys, maybe the image names is in reverse order. Plase refer to submission instruction for proper custom match key naming convention'.format(dataset,seq))
 				if len(list(matches.values())[0].shape)!=2:
@@ -205,7 +205,7 @@ def main():
 	# Unzip folder
 	submission_name = os.path.basename(config.submit_file_path).split('.')[0]
 	folder_path = os.path.dirname(config.submit_file_path)
-	os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
+	#os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
 
 	# Init Logger
 	logger = MonitorLogger(folder_path, submission_name)
