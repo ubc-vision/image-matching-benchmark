@@ -22,6 +22,7 @@ import json
 import hashlib
 import re
 import itertools
+import json 
 from utils.io_helper import load_json
 from utils.pack_helper import get_descriptor_properties
 
@@ -86,6 +87,10 @@ def validate_label(label):
         print('WARNING: Replacing underscore with hyphen in method name')
     return label.replace('_', '-').lower()
 
+def reformat_json(path_json):
+    config = load_json(path_json)
+    with open(path_json, 'w') as f:
+        json.dump(config, f, indent=2)
 
 def add_hash_prfix(path_json,hash_str):
     with open(path_json,'r') as f:
@@ -478,7 +483,10 @@ if __name__ == '__main__':
             
      
     if cfg.is_challenge:
+        # compute hash for h5 files
         hash_str = hash_folder(cfg.path_features)
+        # reformat json with proper incident
+        reformat_json(cfg.path_json)
         # add hash prefix to import path for challenge submissions
         cfg.path_results = os.path.join(cfg.path_results, 'challenge', hash_str)
         # add hash prefix to json label
