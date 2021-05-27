@@ -515,6 +515,15 @@ def validate_method(method, is_challenge, datasets):
                     'geom' in method['config_{}_stereo'.format(dataset1)]:
                 geom = method['config_{}_stereo'.format(dataset1)]['geom']
 
+                # custom match only pairs with cv-8pt for challenge submission
+                if 'use_custom_matches' in method[cur_key]:
+                    if is_challenge and method[cur_key]['use_custom_matches'] \
+                            and method[cur_key]['geom']['method'] != 'cv2-8pt':
+                        raise ValueError(
+                            '[{}/stereo] custom match submission can only use cv2-8pt'
+                            .format(dataset1)
+                        )                       
+
                 # Threshold for RANSAC
                 if geom['method'].lower() in [
                         'cv2-ransac-f', 'cv2-ransac-e', 
