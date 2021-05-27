@@ -162,8 +162,8 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 
 			for match_file in match_files:
 				matches = load_h5(os.path.join(sub_seq_path,match_file))
-				if len(matches.keys()) != len(key_pairs):
-					logger.add_new_log('{}-{}: Matches file contains worng number of keys, should have 4960 keys.'.format(dataset,seq))
+                                if len(matches.keys()) != len(key_pairs):
+                                        logger.add_new_log('{}-{}: Matches file contains wrong number of keys, should have {} keys, have {}.'.format(dataset,seq, len(key_pairs), len(matches.keys())))
 				elif sorted(list(matches.keys()))!=sorted(key_pairs):
 					logger.add_new_log('{}-{}: Matches file contains worng keys, maybe the image names is in reverse order. Plase refer to submission instruction for proper custom match key naming convention'.format(dataset,seq))
 				if len(list(matches.values())[0].shape)!=2:
