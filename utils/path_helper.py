@@ -525,11 +525,8 @@ def get_item_name_list(fullpath_list):
 def get_stereo_viz_folder(cfg):
     '''Returns the path to the stereo visualizations folder.'''
 
-    uuid_prefix = '{}-'.format(get_uuid(
-        cfg)) if cfg.is_challenge else ''
     base = os.path.join(
-        '{}{}'.format(uuid_prefix,
-                      cfg.method_dict['config_common']['json_label'].lower()),
+        cfg.method_dict['config_common']['json_label'].lower(),
         cfg.dataset, cfg.scene, 'stereo')
 
     return os.path.join(cfg.path_visualization, 'png', base), \
@@ -540,8 +537,7 @@ def get_colmap_viz_folder(cfg):
     '''Returns the path to the multiview visualizations folder.'''
 
     base = os.path.join(
-        '{}-{}'.format(get_uuid(cfg),
-                       cfg.method_dict['config_common']['json_label'].lower()),
+        cfg.method_dict['config_common']['json_label'].lower(),
         cfg.dataset, cfg.scene, 'multiview')
 
     return os.path.join(cfg.path_visualization, 'png', base), \
