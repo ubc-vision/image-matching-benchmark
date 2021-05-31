@@ -31,11 +31,11 @@
 # 'keypoint', 'descriptor', and 'custom_matches_name' should only 
 # contains lowercase letters(a-z), numbers(0-9), and two special 
 # charactors('-','.')
-# 'json_label' should only conatins above metioned charactors plus '_'
+# 'json_label' should only contain above mentioned charactors plus '_'
 #
 # Please use this script to validate your zip file before submiting.
 # This script will create a log file alongside with your submission file.
-# Plase make sure there is no error message in the log file.
+# Please make sure there is no error message in the log file.
 
 import os
 import sys
@@ -93,7 +93,7 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 		for seq in seqs:
 			# get number of image
 			raw_seq_path = os.path.join(raw_dataset_path,seq)
-			im_list = [os.path.splitext(f)[0] for f in os.listdir(raw_seq_path) if os.path.isfile(os.path.join(raw_seq_path, f))]
+			im_list = [os.path.splitext(f)[0] for f in os.listdir(raw_seq_path) if (os.path.isfile(os.path.join(raw_seq_path, f)) and f.endswith(('png', 'jpg')))]
 			num_im =len(im_list)
 
 			# get all key pairs
@@ -183,7 +183,7 @@ def validate_json(json_path, datasets, logger):
 	except:
 		logger.add_new_log('Following error occurs when loading json : \n   {}'.format(sys.exc_info()))
 		return
- 
+
 	# validate json
 	if not type(method_list) is list:
 		logger.add_new_log('Json should contain a list of method, please refer to the example json file.')
@@ -196,7 +196,7 @@ def validate_json(json_path, datasets, logger):
 			validate_method(method, is_challenge=True, datasets=datasets)
 		except:
 			logger.add_new_log('Following error occurs when validating json : \n   {}'.format(sys.exc_info()))
-	    
+
 
 def main():
 
@@ -221,8 +221,8 @@ def main():
 		logger.add_new_log('Submission is in proper format, please submit to IMW 2021 website.')
 		print('--------\nSubmission is in proper format, please submit to IMW 2021 website.\n--------')
 	else:
-		logger.add_new_log('Plase fix the above errors and rerun this script!')
-		print('--------\nPlase fix the errors in log file before submitting!\n{}\n--------'.format(logger.get_file_path()))
+		logger.add_new_log('Please fix the above errors and rerun this script!')
+		print('--------\nPlease fix the errors in log file before submitting!\n{}\n--------'.format(logger.get_file_path()))
 
 
 if __name__ == "__main__":
