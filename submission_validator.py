@@ -152,11 +152,11 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 			if 'matches.h5' in match_files:
 				if len(match_files) != 1:
 					logger.add_new_log('{}-{}: matches.h5 exists. Do not need to provide any other match files.'.format(dataset,seq))
-			elif 'matches_multiview.h5' in match_files or 'matches_stereo_0.h5' in match_files:
+			elif 'matches_multiview.h5' in match_files or 'matches_stereo_0.h5' in match_files or 'matches_stereo.h5' in match_files:
 				if 'matches_multiview.h5' not in match_files:
 					logger.add_new_log('{}-{}: missing matches_multiview.h5'.format(dataset,seq))
-				if 'matches_stereo_0.h5' not in match_files:
-					logger.add_new_log('{}-{}: missing matches_stereo_0.h5'.format(dataset,seq))
+				if 'matches_stereo_0.h5' not in match_files and 'matches_stereo.h5' not in match_files:
+					logger.add_new_log('{}-{}: missing matches_stereo.h5'.format(dataset,seq))
 				if 'matches_stereo_1.h5' in match_files or 'matches_stereo_2.h5' in match_files:
 					logger.add_new_log('{}-{}: for 2021 challenge, we only run stereo once, no need to provide matches_stereo_1 and matches_stereo_2'.format(dataset,seq))
 

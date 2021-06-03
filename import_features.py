@@ -62,7 +62,7 @@ def get_desc_category(desc_nbytes):
     # 128 bytes -> 32 float32
     # 512 bytes -> 128 float32
     # 2048 bytes -> 512 float32
-    breakpoints = [128, 512, 2048]
+    breakpoints = [128, 512, 2048, 4096, 8192]
     for b in breakpoints:
         if desc_nbytes <= b:
             return b
@@ -186,6 +186,7 @@ def import_features(cfg):
             fn_ori = os.path.join(cfg.path_features, _dataset, _seq, 'orientations.h5')
             fn_match = os.path.join(cfg.path_features, _dataset, _seq, 'matches.h5')
             fn_multiview_match = os.path.join(cfg.path_features, _dataset, _seq, 'matches_multiview.h5')
+            fn_stereo_match = os.path.join(cfg.path_features, _dataset, _seq,'matches_stereo.h5')
             fn_stereo_match_list = [os.path.join(cfg.path_features, _dataset, _seq,'matches_stereo_{}.h5').
                 format(idx) for idx in range(3)]
 
@@ -199,7 +200,8 @@ def import_features(cfg):
             # Both keypoints and descriptors files are provided
             if os.path.isfile(fn_kp) and os.path.isfile(fn_desc) and not \
                (os.path.isfile(fn_match) or (
-               (os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0])))):
+               (os.path.isfile(fn_multiview_match) and 
+               (os.path.isfile(fn_stereo_match) or os.path.isfile(fn_stereo_match_list[0]))))):
                 # We cannot downsample the keypoints without scores
                 if numkp < max(size_kp_file) and not os.path.isfile(fn_score):
                     raise RuntimeError('------ No scores, and subsampling is required!'
@@ -262,7 +264,8 @@ def import_features(cfg):
                                 h5_w[k] = crop
             elif os.path.isfile(fn_kp) and \
                  (os.path.isfile(fn_match) or \
-                 (os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0]))):
+                 (os.path.isfile(fn_multiview_match) and 
+                 (os.path.isfile(fn_stereo_match) or os.path.isfile(fn_stereo_match_list[0])))):
 
                 if os.path.isfile(fn_desc):
                     print('------ Matches file is provided')
@@ -303,11 +306,15 @@ def import_features(cfg):
                     os.makedirs(stereo_match_folder_path)
                 
                 # copy match file to raw results folder
-                if os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0]):
+                if os.path.isfile(fn_multiview_match) and \
+                   (os.path.isfile(fn_stereo_match) or os.path.isfile(fn_stereo_match_list[0])):
                     print('------ Multiview match file and Stereo match file are provided seperately')
                     if not os.path.isfile(fn_stereo_match_list[1]):
                         print('------ Only one stereo match file is provided, copy it three times')
-                        fn_stereo_match_list = [fn_stereo_match_list[0]]*3
+                        if os.path.isfile(fn_stereo_match_list[0]):
+                            fn_stereo_match_list = [fn_stereo_match_list[0]]*3
+                        else:
+                            fn_stereo_match_list = [fn_stereo_match]*3
                     else:
                         print('------ Three stereo match files are provided')
                 else:
