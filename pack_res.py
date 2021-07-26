@@ -278,12 +278,12 @@ def main(cfg):
         print('Dataset "{}"'.format(dataset))
         if dataset in master_dict:
             # Stereo
-            if 'stereo' in  master_dict[dataset]['results']['allseq']:
+            if 'stereo' in  master_dict[dataset]['results']['allseq'] and cfg.eval_stereo:
                 print('-- Stereo mAA(10 deg): {:.05f}'.format(master_dict[dataset]['results']['allseq']['stereo']['run_avg']['qt_auc_10_th_0.1']['mean']))
                 for scene in master_dict[dataset]['results']:
                     if scene != 'allseq':
                         print('---- Scene "{}" -> Stereo mAA(10 deg): {:.05f}'.format(scene, master_dict[dataset]['results'][scene]['stereo']['run_avg']['qt_auc_10_th_0.1']['mean']))
-            if 'multiview' in  master_dict[dataset]['results']['allseq']:
+            if 'multiview' in  master_dict[dataset]['results']['allseq'] and cfg.eval_multiview::
                 print('-- Multiview mAA(10 deg): {:.05f}'.format(master_dict[dataset]['results']['allseq']['multiview']['run_avg']['bag_avg']['qt_auc_colmap_10']['mean']))
                 for scene in master_dict[dataset]['results']:
                     if scene != 'allseq':
