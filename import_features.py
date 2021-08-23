@@ -37,7 +37,7 @@ def get_hash_list(folder_path,hash):
     dirs = [os.path.join(folder_path,f) for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path,f))]
 
     for _file in sorted(files):
-        if _file.endswith('.h5'): 
+        if _file.endswith('.h5') or os.path.basename(_file)=='config.json': 
             with open(_file, 'rb') as fp:
                 hash.update(fp.read())
     for _dir in sorted(dirs):
@@ -87,20 +87,20 @@ def validate_label(label):
         print('WARNING: Replacing underscore with hyphen in method name')
     return label.replace('_', '-').lower()
 
-def reformat_json(path_json):
-    config = load_json(path_json)
-    with open(path_json, 'w') as f:
+def reformat_json(path_src_json, path_tar_json):
+    config = load_json(path_src_json)
+    with open(path_tar_json, 'w') as f:
         json.dump(config, f, indent=2)
 
-def add_hash_prfix(path_json,hash_str):
-    with open(path_json,'r') as f:
+def add_hash_prfix(path_src_json,path_tar_json,hash_str):
+    with open(path_src_json,'r') as f:
         lines = f.readlines()
         for idx, line in enumerate(lines):
             if 'json_label' in line:
                 if not hash_str in line:
                     lines[idx] = re.sub('"(?P<w1>.*?)"(?P<w2>[^"]+)"(?P<w3>.*?)"', '"\g<w1>"\g<w2>"{}-\g<w3>"'.format(hash_str), line)
 
-    with open(path_json, 'w') as f:
+    with open(path_tar_json, 'w') as f:
         f.writelines(lines)
 
 def import_features(cfg):
@@ -490,14 +490,15 @@ if __name__ == '__main__':
             
      
     if cfg.is_challenge:
+        path_tar_json = os.path.join(os.path.dirname(cfg.path_json),'formatted_'+os.path.basename(cfg.path_json))
         # compute hash for h5 files
         hash_str = hash_folder(cfg.path_features)
         # reformat json with proper incident
-        reformat_json(cfg.path_json)
+        reformat_json(cfg.path_json, path_tar_json)
         # add hash prefix to import path for challenge submissions
         cfg.path_results = os.path.join(cfg.path_results, 'challenge', hash_str)
         # add hash prefix to json label
-        add_hash_prfix(cfg.path_json, hash_str)
+        add_hash_prfix(cfg.path_json, path_tar_json, hash_str)
 
 
     print('Processing the following datasets: {} '.format(cfg.datasets))
