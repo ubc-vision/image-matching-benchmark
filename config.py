@@ -417,6 +417,7 @@ def validate_method(method, is_challenge, datasets):
             'descriptor': And(Use(str),
                               lambda v: re.match("^[a-z0-9-.]*$", v)),
             'num_keypoints': And(int, lambda v: v > 1 or v == -1),
+            Optional('pairwise_keypoints'):  bool,
         },
         **possible_ds,
     })

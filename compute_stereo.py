@@ -90,19 +90,33 @@ def main(cfg):
     print('Compute stereo metrics for all pairs')
     #num_cores = int(multiprocessing.cpu_count() * 0.9)
     num_cores = int(len(os.sched_getaffinity(0)) * 0.9)
-
-    result = Parallel(n_jobs=num_cores)(delayed(compute_stereo_metrics_from_E)(
-        images_list[image_names.index(pair.split('-')[0])], images_list[
-            image_names.index(pair.split('-')[1])],
-        depth_maps_list[image_names.index(pair.split('-')[0])] if cfg.
-        dataset != 'googleurban' else None, depth_maps_list[image_names.index(
-            pair.split('-')[1])] if cfg.dataset != 'googleurban' else None,
-        np.asarray(keypoints_dict[pair.split('-')[0]]),
-        np.asarray(keypoints_dict[pair.split('-')[1]]), calib_dict[pair.split(
-            '-')[0]], calib_dict[pair.split('-')
-                                 [1]], geom_dict[pair], matches_dict[pair],
-        filter_matches_dict[pair], geom_inl_dict[pair], cfg)
-                                        for pair in tqdm(pairs_per_th['0.0']))
+    if cfg.pairwise_keypoints: # picks keypoints per pair
+        result = Parallel(n_jobs=num_cores)(delayed(compute_stereo_metrics_from_E)(
+            images_list[image_names.index(pair.split('-')[0])], images_list[
+                image_names.index(pair.split('-')[1])],
+            depth_maps_list[image_names.index(pair.split('-')[0])] if cfg.
+            dataset != 'googleurban' else None, depth_maps_list[image_names.index(
+                pair.split('-')[1])] if cfg.dataset != 'googleurban' else None,
+            np.asarray(keypoints_dict[pair.split('-')[0]+'-'+pair.split('-')[1]]),
+            np.asarray(keypoints_dict[pair.split('-')[1]+'-'+pair.split('-')[0]]]),
+            calib_dict[pair.split(
+                '-')[0]], calib_dict[pair.split('-')
+                                     [1]], geom_dict[pair], matches_dict[pair],
+            filter_matches_dict[pair], geom_inl_dict[pair], cfg)
+                                            for pair in tqdm(pairs_per_th['0.0']))
+    else:
+        result = Parallel(n_jobs=num_cores)(delayed(compute_stereo_metrics_from_E)(
+            images_list[image_names.index(pair.split('-')[0])], images_list[
+                image_names.index(pair.split('-')[1])],
+            depth_maps_list[image_names.index(pair.split('-')[0])] if cfg.
+            dataset != 'googleurban' else None, depth_maps_list[image_names.index(
+                pair.split('-')[1])] if cfg.dataset != 'googleurban' else None,
+            np.asarray(keypoints_dict[pair.split('-')[0]]),
+            np.asarray(keypoints_dict[pair.split('-')[1]]), calib_dict[pair.split(
+                '-')[0]], calib_dict[pair.split('-')
+                                     [1]], geom_dict[pair], matches_dict[pair],
+            filter_matches_dict[pair], geom_inl_dict[pair], cfg)
+                                            for pair in tqdm(pairs_per_th['0.0']))
 
     # Convert previous visibility list to strings
     old_keys = []

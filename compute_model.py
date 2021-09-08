@@ -135,7 +135,7 @@ def main(cfg):
     except Exception:
         desc_dict = defaultdict(list)
 
-    
+
     try:
         aff_dict = defaultdict(list)
         aff_dict1 = load_h5(get_affine_file(cfg))
@@ -160,22 +160,41 @@ def main(cfg):
         scale_dict = defaultdict(list)
 
     random.shuffle(pairs_per_th['0.0'])
-    result = Parallel(n_jobs=num_cores)(delayed(compute_model)(
-        cfg, np.asarray(matches_dict[pair]),
-        np.asarray(keypoints_dict[pair.split('-')[0]]),
-        np.asarray(keypoints_dict[pair.split('-')[1]]), calib_dict[pair.split(
-            '-')[0]], calib_dict[pair.split('-')[1]], images_list[
-                image_names.index(pair.split('-')[0])], images_list[
-                    image_names.index(pair.split('-')[1])],
-        np.asarray(scale_dict[pair.split('-')[0]]),
-        np.asarray(scale_dict[pair.split('-')[1]]),
-        np.asarray(ori_dict[pair.split('-')[0]]),
-        np.asarray(ori_dict[pair.split('-')[1]]),
-        np.asarray(aff_dict[pair.split('-')[0]]),
-        np.asarray(aff_dict[pair.split('-')[1]]),
-        np.asarray(desc_dict[pair.split('-')[0]]),
-        np.asarray(desc_dict[pair.split('-')[1]]))
-                                        for pair in tqdm(pairs_per_th['0.0']))
+    if cfg.pairwise_keypoints: # picks keypoints per pair
+        result = Parallel(n_jobs=num_cores)(delayed(compute_model)(
+            cfg, np.asarray(matches_dict[pair]),
+            np.asarray(keypoints_dict[pair.split('-')[0]+'-'+pair.split('-')[1]]),
+            np.asarray(keypoints_dict[pair.split('-')[1]+'-'+pair.split('-')[0]]]),
+            calib_dict[pair.split(
+                '-')[0]], calib_dict[pair.split('-')[1]], images_list[
+                    image_names.index(pair.split('-')[0])], images_list[
+                        image_names.index(pair.split('-')[1])],
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None)
+                                            for pair in tqdm(pairs_per_th['0.0']))
+    else:
+        result = Parallel(n_jobs=num_cores)(delayed(compute_model)(
+            cfg, np.asarray(matches_dict[pair]),
+            np.asarray(keypoints_dict[pair.split('-')[0]]),
+            np.asarray(keypoints_dict[pair.split('-')[1]]), calib_dict[pair.split(
+                '-')[0]], calib_dict[pair.split('-')[1]], images_list[
+                    image_names.index(pair.split('-')[0])], images_list[
+                        image_names.index(pair.split('-')[1])],
+            np.asarray(scale_dict[pair.split('-')[0]]),
+            np.asarray(scale_dict[pair.split('-')[1]]),
+            np.asarray(ori_dict[pair.split('-')[0]]),
+            np.asarray(ori_dict[pair.split('-')[1]]),
+            np.asarray(aff_dict[pair.split('-')[0]]),
+            np.asarray(aff_dict[pair.split('-')[1]]),
+            np.asarray(desc_dict[pair.split('-')[0]]),
+            np.asarray(desc_dict[pair.split('-')[1]]))
+                                            for pair in tqdm(pairs_per_th['0.0']))
     # Make model dictionary
     model_dict = {}
     inl_dict = {}
