@@ -106,7 +106,10 @@ def main(cfg):
     if os.path.exists(get_geom_file(cfg)):
         print(' -- already exists, skipping model computation')
         return
-
+    try:
+        pairwise_keypoints = cfg.method_dict['config_common']['pairwise_keypoints']
+    except:
+        pairwise_keypoints = False
     # Get data directory
     keypoints_dict = load_h5(get_kp_file(cfg))
 
@@ -160,11 +163,11 @@ def main(cfg):
         scale_dict = defaultdict(list)
 
     random.shuffle(pairs_per_th['0.0'])
-    if cfg.pairwise_keypoints: # picks keypoints per pair
+    if pairwise_keypoints: # picks keypoints per pair
         result = Parallel(n_jobs=num_cores)(delayed(compute_model)(
             cfg, np.asarray(matches_dict[pair]),
             np.asarray(keypoints_dict[pair.split('-')[0]+'-'+pair.split('-')[1]]),
-            np.asarray(keypoints_dict[pair.split('-')[1]+'-'+pair.split('-')[0]]]),
+            np.asarray(keypoints_dict[pair.split('-')[1]+'-'+pair.split('-')[0]]),
             calib_dict[pair.split(
                 '-')[0]], calib_dict[pair.split('-')[1]], images_list[
                     image_names.index(pair.split('-')[0])], images_list[

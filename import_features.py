@@ -179,86 +179,63 @@ def import_features(cfg):
         print('Descriptor file is not given')
     # Import
     print('Importing features...')
-    for _data in data_list:
-        print('--- On "{}"...'.format(_data))
+    for _dataset in cfg.datasets:
+        for _seq in seqs_dict[_dataset]:
+            print('--- On "{}: {}"...'.format(_dataset,_seq))
 
-        fn_kp = os.path.join(cfg.path_features, _data, 'keypoints.h5')
-        fn_desc = os.path.join(cfg.path_features, _data, 'descriptors.h5')
-        fn_score = os.path.join(cfg.path_features, _data, 'scores.h5')
-        fn_scale = os.path.join(cfg.path_features, _data, 'scales.h5')
-        fn_ori = os.path.join(cfg.path_features, _data, 'orientations.h5')
-        fn_match = os.path.join(cfg.path_features, _data, 'matches.h5')
-        fn_multiview_match = os.path.join(cfg.path_features, _data, 'matches_multiview.h5')
-        fn_stereo_match_list = [os.path.join(cfg.path_features, _data,'matches_stereo_{}.h5').
-            format(idx) for idx in range(3)]
+            fn_kp = os.path.join(cfg.path_features, _dataset, _seq, 'keypoints.h5')
+            fn_desc = os.path.join(cfg.path_features, _dataset, _seq, 'descriptors.h5')
+            fn_score = os.path.join(cfg.path_features, _dataset, _seq, 'scores.h5')
+            fn_scale = os.path.join(cfg.path_features, _dataset, _seq, 'scales.h5')
+            fn_ori = os.path.join(cfg.path_features, _dataset, _seq, 'orientations.h5')
+            fn_match = os.path.join(cfg.path_features, _dataset, _seq, 'matches.h5')
+            fn_multiview_match = os.path.join(cfg.path_features, _dataset, _seq, 'matches_multiview.h5')
+            fn_stereo_match = os.path.join(cfg.path_features, _dataset, _seq,'matches_stereo.h5')
+            fn_stereo_match_list = [os.path.join(cfg.path_features, _dataset, _seq,'matches_stereo_{}.h5').
+                format(idx) for idx in range(3)]
 
-        # create keypoints folder
-        if cfg.pairwise_matching:
-            tgt_cur = os.path.join(
-                cfg.path_results, _data,
-                '_'.join([cfg.kp_name, str(-1), cfg.desc_name]))
-        else:
-            tgt_cur = os.path.join(
-                cfg.path_results, _data,
-                '_'.join([cfg.kp_name, str(numkp), cfg.desc_name]))
-        if not os.path.isdir(tgt_cur):
-            os.makedirs(tgt_cur)
-
-        # Both keypoints and descriptors files are provided
-        if os.path.isfile(fn_kp) and os.path.isfile(fn_desc) and not \
-           (os.path.isfile(fn_match) or (
-           (os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0])))):
-            # We cannot downsample the keypoints without scores
-            if numkp < max(size_kp_file) and not os.path.isfile(fn_score):
-                raise RuntimeError('------ No scores, and subsampling is required!'
-                                   '(wanted: {}, found: {})'.format(
-                                       numkp, max(size_kp_file)))
-
-            # Import keypoints
-            print('------ Importing keypoints and descriptors')
-
-            # If there is no need to subsample, we can just copy the files
-            if numkp >= max(size_kp_file):
-                copy(fn_kp, tgt_cur)
-                copy(fn_desc, tgt_cur)
-                if os.path.isfile(fn_score):
-                    copy(fn_score, tgt_cur)
-                if os.path.isfile(fn_scale):
-                    copy(fn_scale, tgt_cur)
-                if os.path.isfile(fn_ori):
-                    copy(fn_ori, tgt_cur)
-            # Otherwise, crop each file separately
+            # create keypoints folder
+            if cfg.pairwise_matching:
+                tgt_cur = os.path.join(
+                    cfg.path_results, _dataset, _seq,
+                    '_'.join([cfg.kp_name, str(-1), cfg.desc_name]))
             else:
-                subsampled_indices = {}
-                with h5py.File(fn_score, 'r') as h5_r, \
-                        h5py.File(os.path.join(tgt_cur, 'scores.h5'), 'w') as h5_w:
-                    for k in h5_r:
-                        sorted_indices = np.argsort(h5_r[k])[::-1]
-                        subsampled_indices[k] = sorted_indices[:min(
-                            h5_r[k].size, numkp)]
-                        crop = h5_r[k].value[subsampled_indices[k]]
-                        h5_w[k] = crop
-                with h5py.File(fn_kp, 'r') as h5_r, \
-                        h5py.File(
-                                os.path.join(tgt_cur, 'keypoints.h5'),
-                                'w') as h5_w:
-                    for k in h5_r:
-                        crop = h5_r[k].value[subsampled_indices[k], :]
-                        h5_w[k] = crop
-                with h5py.File(fn_desc, 'r') as h5_r, \
-                        h5py.File(
-                                os.path.join(
-                                    tgt_cur, 'descriptors.h5'), 'w') as h5_w:
-                    for k in h5_r:
-                        crop = h5_r[k].value[subsampled_indices[k], :]
-                        h5_w[k] = crop
-                if os.path.isfile(fn_scale):
-                    with h5py.File(fn_scale, 'r') as h5_r, \
-                            h5py.File(
-                                    os.path.join(tgt_cur, 'scales.h5'),
-                                    'w') as h5_w:
+                tgt_cur = os.path.join(
+                    cfg.path_results, _dataset, _seq,
+                    '_'.join([cfg.kp_name, str(numkp), cfg.desc_name]))
+            if not os.path.isdir(tgt_cur):
+                os.makedirs(tgt_cur)
+
+            # Both keypoints and descriptors files are provided
+            if os.path.isfile(fn_kp) and os.path.isfile(fn_desc) and not \
+               (os.path.isfile(fn_match) or (
+               (os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0])))):
+                # We cannot downsample the keypoints without scores
+                if numkp < max(size_kp_file) and not os.path.isfile(fn_score):
+                    raise RuntimeError('------ No scores, and subsampling is required!'
+                                       '(wanted: {}, found: {})'.format(
+                                           numkp, max(size_kp_file)))
+
+                # Import keypoints
+                print('------ Importing keypoints and descriptors')
+
+                # If there is no need to subsample, we can just copy the files
+                if numkp >= max(size_kp_file):
+                    copy(fn_kp, tgt_cur)
+                    copy(fn_desc, tgt_cur)
+                    if os.path.isfile(fn_score):
+                        copy(fn_score, tgt_cur)
+                    if os.path.isfile(fn_scale):
+                        copy(fn_scale, tgt_cur)
+                    if os.path.isfile(fn_ori):
+                        copy(fn_ori, tgt_cur)
+                # Otherwise, crop each file separately
+                else:
+                    subsampled_indices = {}
+                    with h5py.File(fn_score, 'r') as h5_r, \
+                            h5py.File(os.path.join(tgt_cur, 'scores.h5'), 'w') as h5_w:
                         for k in h5_r:
-                            sorted_indices = np.argsort(h5_r[k].value.reshape(-1))[::-1]
+                            sorted_indices = np.argsort(h5_r[k])[::-1]
                             subsampled_indices[k] = sorted_indices[:min(
                                 h5_r[k].size, numkp)]
                             crop = h5_r[k].value[subsampled_indices[k]]
@@ -283,21 +260,45 @@ def import_features(cfg):
                                         os.path.join(tgt_cur, 'scales.h5'),
                                         'w') as h5_w:
                             for k in h5_r:
+                                sorted_indices = np.argsort(h5_r[k].value.reshape(-1))[::-1]
+                                subsampled_indices[k] = sorted_indices[:min(
+                                    h5_r[k].size, numkp)]
                                 crop = h5_r[k].value[subsampled_indices[k]]
                                 h5_w[k] = crop
-                    if os.path.isfile(fn_ori):
-                        with h5py.File(fn_ori, 'r') as h5_r, \
+                        with h5py.File(fn_kp, 'r') as h5_r, \
                                 h5py.File(
-                                        os.path.join(tgt_cur, 'orientations.h5'),
+                                        os.path.join(tgt_cur, 'keypoints.h5'),
                                         'w') as h5_w:
                             for k in h5_r:
-                                crop = h5_r[k].value[subsampled_indices[k]]
+                                crop = h5_r[k].value[subsampled_indices[k], :]
                                 h5_w[k] = crop
+                        with h5py.File(fn_desc, 'r') as h5_r, \
+                                h5py.File(
+                                        os.path.join(
+                                            tgt_cur, 'descriptors.h5'), 'w') as h5_w:
+                            for k in h5_r:
+                                crop = h5_r[k].value[subsampled_indices[k], :]
+                                h5_w[k] = crop
+                        if os.path.isfile(fn_scale):
+                            with h5py.File(fn_scale, 'r') as h5_r, \
+                                    h5py.File(
+                                            os.path.join(tgt_cur, 'scales.h5'),
+                                            'w') as h5_w:
+                                for k in h5_r:
+                                    crop = h5_r[k].value[subsampled_indices[k]]
+                                    h5_w[k] = crop
+                        if os.path.isfile(fn_ori):
+                            with h5py.File(fn_ori, 'r') as h5_r, \
+                                    h5py.File(
+                                            os.path.join(tgt_cur, 'orientations.h5'),
+                                            'w') as h5_w:
+                                for k in h5_r:
+                                    crop = h5_r[k].value[subsampled_indices[k]]
+                                    h5_w[k] = crop
             elif os.path.isfile(fn_kp) and \
                  (os.path.isfile(fn_match) or \
                  (os.path.isfile(fn_multiview_match) and
                  (os.path.isfile(fn_stereo_match) or os.path.isfile(fn_stereo_match_list[0])))):
-
                 if os.path.isfile(fn_desc):
                     print('------ Matches file is provided')
                 print('------ Importing matches')

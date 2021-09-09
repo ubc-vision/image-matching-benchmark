@@ -92,7 +92,7 @@ def main(cfg):
     # Feature Matching
     print('Computing matches')
     num_cores = cfg.num_opencv_threads if cfg.num_opencv_threads > 0 else int(
-        len(os.sched_getaffinity(0)) * 0.9)
+        len(os.sched_getaffinity(0)) * 0.75)
     if WITH_FAISS:
         num_cores = min(4, num_cores)
     result = Parallel(n_jobs=num_cores)(

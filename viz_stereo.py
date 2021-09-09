@@ -42,6 +42,11 @@ def main(cfg):
 
     '''
 
+    try:
+        pairwise_keypoints = cfg.method_dict['config_common']['pairwise_keypoints']
+    except:
+        pairwise_keypoints = False
+
     # Files should not be named to prevent (easy) abuse
     # Instead we use 0, ..., cfg.num_viz_stereo_pairs
     viz_folder_hq, viz_folder_lq = get_stereo_viz_folder(cfg)
@@ -114,7 +119,7 @@ def main(cfg):
         inl = ransac_inl_dict[pair]
 
         # Get depth for keypoints
-        if cfg.pairwise_keypoints:
+        if pairwise_keypoints:
             kp1 = keypoints_dict[f'{fn1}-{fn2}']
             kp2 = keypoints_dict[f'{fn2}-{fn1}']
         else:
