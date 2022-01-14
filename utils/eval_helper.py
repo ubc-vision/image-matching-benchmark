@@ -96,7 +96,7 @@ def ate_ransac(model, data, num_itr, threshold):
         opt_num_inlier
 
 
-def evaluate_R_t(R_gt, t_gt, R, t, q_gt=None):
+def evaluate_R_t(R_gt, t_gt, R, t, q_gt=None, gt_scale_coef = None):
     t = t.flatten()
     t_gt = t_gt.flatten()
 
@@ -109,6 +109,14 @@ def evaluate_R_t(R_gt, t_gt, R, t, q_gt=None):
     q_gt = q_gt / (np.linalg.norm(q_gt) + eps)
     loss_q = np.maximum(eps, (1.0 - np.sum(q * q_gt)**2))
     err_q = np.arccos(1 - 2 * loss_q)
+    if gt_scale_coef is not None:
+        GT_SCALE = np.linalg.norm(t_gt) * gt_scale_coef
+        t = GT_SCALE * (t / (np.linalg.norm(t) + eps))
+        t_gt = t_gt * SCALE
+        err_t_meters = min(np.linalg.norm(t_gt - t),
+                           np.linalg.norm(t_gt + t))
+    else:
+        err_t_meters = -1
 
     t = t / (np.linalg.norm(t) + eps)
     t_gt = t_gt / (np.linalg.norm(t_gt) + eps)
@@ -121,10 +129,10 @@ def evaluate_R_t(R_gt, t_gt, R, t, q_gt=None):
         import IPython
         IPython.embed()
 
-    return err_q, err_t
+    return err_q, err_t, err_t_meters
 
 
-def eval_essential_matrix(p1n, p2n, E, dR, dt):
+def eval_essential_matrix(p1n, p2n, E, dR, dt, gt_scale=None):
     if len(p1n) != len(p2n):
         raise RuntimeError('Size mismatch in the keypoint lists')
 
@@ -134,13 +142,15 @@ def eval_essential_matrix(p1n, p2n, E, dR, dt):
     if E.size > 0:
         _, R, t, _ = cv2.recoverPose(E, p1n, p2n)
         try:
-            err_q, err_t = evaluate_R_t(dR, dt, R, t)
+            err_q, err_t, err_t_meters = evaluate_R_t(dR, dt, R, t, gt_scale)
         except:
             err_q = np.pi
             err_t = np.pi / 2
+            err_t_meters = 1e6
 
     else:
         err_q = np.pi
         err_t = np.pi / 2
+        err_t_meters = 1e6
 
-    return err_q, err_t
+    return err_q, err_t, err_t_meters

@@ -61,7 +61,7 @@ def main(cfg):
     if is_stereo_complete(cfg):
         print(' -- already exists, skipping stereo eval')
         return
-
+    gt_scale_coef = None
     # Load keypoints and matches
     keypoints_dict = load_h5(get_kp_file(cfg))
     matches_dict = load_h5(get_match_file(cfg))
@@ -106,7 +106,7 @@ def main(cfg):
             calib_dict[pair.split(
                 '-')[0]], calib_dict[pair.split('-')
                                      [1]], geom_dict[pair], matches_dict[pair],
-            filter_matches_dict[pair], geom_inl_dict[pair], cfg)
+            filter_matches_dict[pair], geom_inl_dict[pair], cfg, gt_scale_coef)
                                             for pair in tqdm(pairs_per_th['0.0']))
     else:
         result = Parallel(n_jobs=num_cores)(delayed(compute_stereo_metrics_from_E)(
@@ -119,7 +119,7 @@ def main(cfg):
             np.asarray(keypoints_dict[pair.split('-')[1]]), calib_dict[pair.split(
                 '-')[0]], calib_dict[pair.split('-')
                                      [1]], geom_dict[pair], matches_dict[pair],
-            filter_matches_dict[pair], geom_inl_dict[pair], cfg)
+            filter_matches_dict[pair], geom_inl_dict[pair], cfg, gt_scale_coef)
                                             for pair in tqdm(pairs_per_th['0.0']))
 
     # Convert previous visibility list to strings
@@ -152,8 +152,10 @@ def main(cfg):
                     all_keys[i]] = result[i][1][2] if result[i][1] else None
                 err_q = result[i][2]
                 err_t = result[i][3]
+                err_t_meters = result[i][6]
+
                 rep_s_dict[all_keys[i]] = result[i][4]
-                err_dict[all_keys[i]] = [err_q, err_t]
+                err_dict[all_keys[i]] = [err_q, err_t, err_t_meters]
     print('Aggregating results for the old visibility constraint: '
           '{}/{}'.format(len(geo_s_dict_pre_match), len(result)))
 
@@ -186,9 +188,10 @@ def main(cfg):
                         i]] = result[i][1][2] if result[i][1] else None
                     err_q = result[i][2]
                     err_t = result[i][3]
+                    err_t_meters = result[i][6]
                     _rep_s_dict[
                         all_keys[i]] = result[i][4] if result[i][4] else []#None
-                    _err_dict[all_keys[i]] = [err_q, err_t]
+                    _err_dict[all_keys[i]] = [err_q, err_t, err_t_meters]
         geo_s_dict_pre_match_th[th] = _geo_s_dict_pre_match
         geo_s_dict_refined_match_th[th] = _geo_s_dict_refined_match
         geo_s_dict_final_match_th[th] = _geo_s_dict_final_match

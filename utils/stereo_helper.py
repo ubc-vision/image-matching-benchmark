@@ -214,7 +214,7 @@ def eval_match_score(kp1, kp2, kp1n, kp2n, kp1p, kp2p, d1, d2, inl, dR, dT):
 
 def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
                                   calib2, E, inl_prematch, inl_refined,
-                                  inl_geom, cfg):
+                                  inl_geom, cfg, gt_scale=None):
     ''' Computes the stereo metrics.'''
 
     # Get R, t from calibration information
@@ -228,13 +228,13 @@ def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
     # Compute error in R, T
     kp1n = normalize_keypoints(kp1, calib1['K'])
     kp2n = normalize_keypoints(kp2, calib2['K'])
-    err_q, err_t = eval_essential_matrix(kp1n[inl_geom[0]], kp2n[inl_geom[1]],
-                                         E, dR, dT)
+    err_q, err_t, err_t_meters = eval_essential_matrix(kp1n[inl_geom[0]], kp2n[inl_geom[1]],
+                                         E, dR, dT, gt_scale)
 
     # If the dataset does not contain depth information, there is nothing else
     # to do.
     if cfg.dataset == 'googleurban':
-        return [], [], err_q, err_t, [], True
+        return [], [], err_q, err_t, [], True, err_t_meters
 
     # Clip keypoints based on shape of matches
     kp1 = kp1[:, :2]
@@ -316,4 +316,4 @@ def compute_stereo_metrics_from_E(img1, img2, depth1, depth2, kp1, kp2, calib1,
     geod_d_list.append(geod_d)
     true_d_list.append(true_d)
 
-    return geod_d_list, true_d_list, err_q, err_t, rep_s_list, True
+    return geod_d_list, true_d_list, err_q, err_t, rep_s_list, True, err_t_meters
