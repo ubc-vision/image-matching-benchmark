@@ -42,6 +42,11 @@ def main(cfg):
 
     '''
 
+    try:
+        pairwise_keypoints = cfg.method_dict['config_common']['pairwise_keypoints']
+    except:
+        pairwise_keypoints = False
+
     # Files should not be named to prevent (easy) abuse
     # Instead we use 0, ..., cfg.num_viz_stereo_pairs
     viz_folder_hq, viz_folder_lq = get_stereo_viz_folder(cfg)
@@ -114,8 +119,12 @@ def main(cfg):
         inl = ransac_inl_dict[pair]
 
         # Get depth for keypoints
-        kp1 = keypoints_dict[fn1]
-        kp2 = keypoints_dict[fn2]
+        if pairwise_keypoints:
+            kp1 = keypoints_dict[f'{fn1}-{fn2}']
+            kp2 = keypoints_dict[f'{fn2}-{fn1}']
+        else:
+            kp1 = keypoints_dict[fn1]
+            kp2 = keypoints_dict[fn2]
         # Normalize keypoints
         kp1n = normalize_keypoints(kp1, calc1['K'])
         kp2n = normalize_keypoints(kp2, calc2['K'])
@@ -210,10 +219,10 @@ def main(cfg):
 
         # Plot matches
         # Points are normalized by the focals, which are on average ~670.
-          
+
         max_dist = 5
         if cfg.dataset == 'googleurban':
-            max_dist = 2e-4 
+            max_dist = 2e-4
         if cfg.dataset == 'pragueparks':
            max_dist = 2e-4
         cmap = matplotlib.cm.get_cmap('summer')

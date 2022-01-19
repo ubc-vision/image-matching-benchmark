@@ -237,8 +237,11 @@ def queue_job(job_file_fullpath, cfg, num_queue=1, dep_str=None, cpu=None):
             com += [job_file_fullpath]
             # Queue the job
             print(' '.join(com))
-            slurm_res = subprocess.run(com, stdout=subprocess.PIPE)
-            print(slurm_res.stdout.decode().rstrip('\n'))
+            for i in range(3):
+                slurm_res = subprocess.run(com, stdout=subprocess.PIPE)
+                print(slurm_res.stdout.decode().rstrip('\n'))
+                if slurm_res.returncode == 0:
+                    break
             # Get job ID
             if slurm_res.returncode != 0:
                 raise RuntimeError('Slurm error!')
