@@ -1,5 +1,7 @@
 # Image Matching Benchmark
 
+**Warning: If you use the multi-view part of the benchmark, please use COLMAP 3.5.** Newer versions change the behaviour of COLMAP when it cannot find a good initial pair to start the reconstruction, which now triggers a failure instead of a warning. This cascades into the benchmark.
+
 This is the code release for the Image Matching benchmark, which is the basis of a [challenge](https://image-matching-challenge.github.io/) on wide-baseline image matching co-located with the CVPR 2020 workshop on [Image Matching: Local Features and Beyond](https://image-matching-workshop.github.io/). Its goal is to allow researchers to evaluate methods for local feature extraction and matching, using downstream metrics such as the accuracy of the final poses, on a standardized benchmark, against and alongside state-of-the-art methods for every stage of the traditional image matching pipeline.
 
 Running the benchmark requires writing a configuration file and, typically, providing pre-computed features (and matches). We provide a validation set with three sequences. Challenge submissions will be sent to the organizers and processed on a private test set, for which we provide images, but not the ground truth. This release aims to help with the following:
