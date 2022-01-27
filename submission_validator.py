@@ -120,8 +120,10 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 					if list(keypoints.values())[0].shape[1]!=2:
 						logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
 					# check number of keypoints
-					if list(keypoints.values())[0].shape[0] > 8000:
-						logger.add_new_log('{}-{}: Keypoints file contains more than 8000 points.'.format(dataset,seq))
+					for _keypoints in keypoints.values():
+						if _keypoints.shape[0] > 8000:
+							logger.add_new_log('{}-{}: Keypoints file contains more than 8000 points.'.format(dataset,seq))
+							break
 			
 			# check if match file exists first
 			match_files = [file for file in os.listdir(sub_seq_path) if os.path.isfile(os.path.join(sub_seq_path,file)) and file.startswith('match')]	
