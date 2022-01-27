@@ -123,6 +123,6 @@ def load_h5(filename):
             keys = [key for key in f.keys()]
             for key in keys:
                 dict_to_load[key] = f[key][()]
-    except:
-        print('Cannot find file {}'.format(filename))
+    except Exception as e:
+        print("Following error occured when loading h5 file {}: {}".format(filename,e))
     return dict_to_load

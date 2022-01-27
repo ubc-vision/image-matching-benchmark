@@ -110,16 +110,18 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 				logger.add_new_log('Submission does not contain keypoints file for {} sequence in {} dataset.'.format(seq,dataset))
 			else:
 				keypoints = load_h5(kp_path)
-
-				if sorted(list(keypoints.keys()))!=sorted(im_list):
-					logger.add_new_log('{}-{}: Keypoints file does not contain all the image keys.'.format(dataset,seq))
-				if len(list(keypoints.values())[0].shape)!=2:
-					logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
-				if list(keypoints.values())[0].shape[1]!=2:
-					logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
-				# check number of keypoints
-				if list(keypoints.values())[0].shape[0] > 8000:
-					logger.add_new_log('{}-{}: Keypoints file contains more than 8000 points.'.format(dataset,seq))
+				if len(keypoints.keys()) == 0:
+					logger.add_new_log('{}-{}: Keypoints file is corrupted'.format(dataset,seq))
+				else:
+					if sorted(list(keypoints.keys()))!=sorted(im_list):
+						logger.add_new_log('{}-{}: Keypoints file does not contain all the image keys.'.format(dataset,seq))
+					if len(list(keypoints.values())[0].shape)!=2:
+						logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
+					if list(keypoints.values())[0].shape[1]!=2:
+						logger.add_new_log('{}-{}: Keypoints file is in wrong format.'.format(dataset,seq))
+					# check number of keypoints
+					if list(keypoints.values())[0].shape[0] > 8000:
+						logger.add_new_log('{}-{}: Keypoints file contains more than 8000 points.'.format(dataset,seq))
 			
 			# check if match file exists first
 			match_files = [file for file in os.listdir(sub_seq_path) if os.path.isfile(os.path.join(sub_seq_path,file)) and file.startswith('match')]	
@@ -134,18 +136,20 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 				pass
 			else:
 				descriptors = load_h5(desc_path)
-				
-				if sorted(list(descriptors.keys()))!=sorted(im_list):
-					logger.add_new_log('{}-{}: Descriptors file does not contain all the image keys.'.format(dataset,seq))
-				if len(list(descriptors.values())[0].shape)!=2:
-					logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))
-				if list(descriptors.values())[0].shape[1]<64 or list(descriptors.values())[0].shape[1]>2048:
-					logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))
-				
-				# check descriptor size
-				desc_type, desc_size, desc_nbytes = get_descriptor_properties({},descriptors)
-				if desc_nbytes > 512 and len(match_files)==0:
-					logger.add_new_log('{}-{}: Descriptors size is larger than 512 bytes, you need to provide custom match file'.format(dataset,seq))
+				if len(descriptors.keys()) == 0:
+					logger.add_new_log('{}-{}: Descriptors file is corrupted'.format(dataset,seq))
+				else:
+					if sorted(list(descriptors.keys()))!=sorted(im_list):
+						logger.add_new_log('{}-{}: Descriptors file does not contain all the image keys.'.format(dataset,seq))
+					if len(list(descriptors.values())[0].shape)!=2:
+						logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))
+					if list(descriptors.values())[0].shape[1]<64 or list(descriptors.values())[0].shape[1]>2048:
+						logger.add_new_log('{}-{}: Descriptors file is in wrong format'.format(dataset,seq))
+					
+					# check descriptor size
+					desc_type, desc_size, desc_nbytes = get_descriptor_properties({},descriptors)
+					if desc_nbytes > 512 and len(match_files)==0:
+						logger.add_new_log('{}-{}: Descriptors size is larger than 512 bytes, you need to provide custom match file'.format(dataset,seq))
 
 			# validate match file
 			# check match file name
@@ -162,14 +166,17 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 
 			for match_file in match_files:
 				matches = load_h5(os.path.join(sub_seq_path,match_file))
-				if len(matches.keys()) != len(key_pairs):
-					logger.add_new_log('{}-{}: Matches file contains wrong number of keys, should have {} keys, have {}.'.format(dataset,seq, len(key_pairs), len(matches.keys())))
-				elif sorted(list(matches.keys()))!=sorted(key_pairs):
-					logger.add_new_log('{}-{}: Matches file contains worng keys, maybe the image names is in reverse order. Plase refer to submission instruction for proper custom match key naming convention'.format(dataset,seq))
-				if len(list(matches.values())[0].shape)!=2:
-					logger.add_new_log('{}-{}: Matches file is in wrong format.'.format(dataset,seq))
-				if list(matches.values())[0].shape[0]!=2:
-					logger.add_new_log('{}-{}: Matches file is in wrong format.'.format(dataset,seq))	
+				if len(matches.keys()) == 0:
+					logger.add_new_log('{}-{}: Matches file is corrupted'.format(dataset,seq))
+				else:
+					if len(matches.keys()) != len(key_pairs):
+						logger.add_new_log('{}-{}: Matches file contains wrong number of keys, should have {} keys, have {}.'.format(dataset,seq, len(key_pairs), len(matches.keys())))
+					elif sorted(list(matches.keys()))!=sorted(key_pairs):
+						logger.add_new_log('{}-{}: Matches file contains worng keys, maybe the image names is in reverse order. Plase refer to submission instruction for proper custom match key naming convention'.format(dataset,seq))
+					if len(list(matches.values())[0].shape)!=2:
+						logger.add_new_log('{}-{}: Matches file is in wrong format.'.format(dataset,seq))
+					if list(matches.values())[0].shape[0]!=2:
+						logger.add_new_log('{}-{}: Matches file is in wrong format.'.format(dataset,seq))	
 
 
 def validate_json(json_path, datasets, logger):
