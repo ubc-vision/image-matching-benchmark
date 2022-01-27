@@ -208,8 +208,8 @@ def import_features(cfg):
 
             # Both keypoints and descriptors files are provided
             if os.path.isfile(fn_kp) and os.path.isfile(fn_desc) and not \
-               (os.path.isfile(fn_match) or (
-               (os.path.isfile(fn_multiview_match) and os.path.isfile(fn_stereo_match_list[0])))):
+               (os.path.isfile(fn_match) or 
+               (os.path.isfile(fn_multiview_match) and (os.path.isfile(fn_stereo_match_list[0]) or os.path.isfile(fn_stereo_match)))):
                 # We cannot downsample the keypoints without scores
                 if numkp < max(size_kp_file) and not os.path.isfile(fn_score):
                     raise RuntimeError('------ No scores, and subsampling is required!'
