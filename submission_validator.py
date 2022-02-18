@@ -86,7 +86,7 @@ def validate_submission_files(sub_path,benchmark_repo_path, datasets, raw_data_p
 		# check if dataset folder exists
 		sub_dataset_path = os.path.join(sub_path,dataset)
 		if not os.path.isdir(sub_dataset_path):
-			logger.add_new_log('Submission does not contain {} dataset.'.format(dataset))
+			logger.add_new_log('Submission does not contain {} dataset (ignore this mesage if you do not intend to evaluate on this dataset).'.format(dataset))
 			continue
 		# read seqs from json
 		seqs = load_json(os.path.join(benchmark_repo_path,'json/data/{}_test.json'.format(dataset)))
@@ -213,18 +213,19 @@ def main():
 	
 	# Unzip folder
 	submission_name = os.path.basename(config.submit_file_path).split('.')[0]
+	extracted_folder = '{}_extracted'.format(submission_name)
 	folder_path = os.path.dirname(config.submit_file_path)
-	os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,submission_name)))
+	os.system('unzip {} -d {}'.format(config.submit_file_path,os.path.join(folder_path,extracted_folder)))
 
 	# Init Logger
 	logger = MonitorLogger(folder_path, submission_name)
 
 	# Validate Submission files
-	validate_submission_files(os.path.join(folder_path,submission_name), config.benchmark_repo_path, config.datasets, config.raw_data_path,logger)
+	validate_submission_files(os.path.join(folder_path,extracted_folder), config.benchmark_repo_path, config.datasets, config.raw_data_path,logger)
 
 
 	# Validate Json
-	validate_json(os.path.join(folder_path,submission_name,'config.json'), config.datasets, logger)
+	validate_json(os.path.join(folder_path,extracted_folder,'config.json'), config.datasets, logger)
 
 	if logger.is_empty():
 		logger.add_new_log('Submission is in proper format, please submit to IMW 2021 website.')
