@@ -112,7 +112,7 @@ def evaluate_R_t(R_gt, t_gt, R, t, q_gt=None, gt_scale_coef = None):
     if gt_scale_coef is not None:
         GT_SCALE = np.linalg.norm(t_gt) * gt_scale_coef
         t = GT_SCALE * (t / (np.linalg.norm(t) + eps))
-        t_gt = t_gt * SCALE
+        t_gt = t_gt * gt_scale_coef
         err_t_meters = min(np.linalg.norm(t_gt - t),
                            np.linalg.norm(t_gt + t))
     else:
@@ -133,6 +133,8 @@ def evaluate_R_t(R_gt, t_gt, R, t, q_gt=None, gt_scale_coef = None):
 
 
 def eval_essential_matrix(p1n, p2n, E, dR, dt, gt_scale=None):
+    gt_scale1 = 2.5170
+    print ("WARNING! Hardcoded scale for british_museum=2.5170")
     if len(p1n) != len(p2n):
         raise RuntimeError('Size mismatch in the keypoint lists')
 
@@ -142,7 +144,8 @@ def eval_essential_matrix(p1n, p2n, E, dR, dt, gt_scale=None):
     if E.size > 0:
         _, R, t, _ = cv2.recoverPose(E, p1n, p2n)
         try:
-            err_q, err_t, err_t_meters = evaluate_R_t(dR, dt, R, t, gt_scale)
+            err_q, err_t, err_t_meters = evaluate_R_t(dR, dt, R, t, None, gt_scale1)
+            #print (180.0*err_t/np.pi, err_t_meters)
         except:
             err_q = np.pi
             err_t = np.pi / 2

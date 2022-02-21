@@ -266,18 +266,20 @@ def compute_qt_auc(res_dict, deprecated_images, cfg):
         err_qt = []
         for key, value in pose_err_dict.items():
             err_qt += [value]
-
+        #print (f'err_qt={err_qt}')
         if len(err_qt) > 0:
-            err_qt = np.asarray(err_qt)[:,:2]
+            err_qt = np.asarray(err_qt)#[:,:2]
             err_q = deepcopy(err_qt[:,:1]) * 180.0 / np.pi
             err_t_meters = deepcopy(err_qt[:,2:3])
-
+            err_qt = err_qt[:,:2]
+            #print (f'err_t_meters = {err_t_meters}')
             # Take the maximum among q and t errors
             err_qt = np.max(err_qt, axis=1)
             # Convert to degree
             err_qt = err_qt * 180.0 / np.pi
             # Make infs to a large value so that np.histogram can be used.
             err_qt[err_qt == np.inf] = 1e6
+            err_t_meters[err_t_meters == np.inf] = 1e6
             err_q[err_q == np.inf] = 1e6
 
 
@@ -289,6 +291,7 @@ def compute_qt_auc(res_dict, deprecated_images, cfg):
             acc_new = []
             for th_q, th_t in zip(thresholds_q, thresholds_t):
                 acc_new += [((np.array(err_q) < th_q) * (np.array(err_t_meters) < th_t)).mean()]
+            print (acc_new)
             # Normalize histogram with all possible pairs
             num_pair = float(len(err_qt))
             qt_hist = qt_hist.astype(float) / num_pair
@@ -303,7 +306,7 @@ def compute_qt_auc(res_dict, deprecated_images, cfg):
         res_dict['qt_01_10{}'.format(label)] = qt_hist.tolist()
         res_dict['qt_auc_05{}'.format(label)] = np.mean(qt_acc[:5])
         res_dict['qt_auc_10{}'.format(label)] = np.mean(qt_acc)
-        res_dict['qtnew_01_10{}'.format(label)] = acc_new.tolist()
+        res_dict['qtnew_01_10{}'.format(label)] = acc_new#.tolist()
         res_dict['qtnew_auc_05{}'.format(label)] = np.mean(acc_new[:5])
         res_dict['qtnew_auc_10{}'.format(label)] = np.mean(acc_new)
 
