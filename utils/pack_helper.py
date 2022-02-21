@@ -255,7 +255,8 @@ def compute_qt_auc(res_dict, deprecated_images, cfg):
     data_dir = get_data_path(cfg)
     pairs_per_th = get_pairs_per_threshold(data_dir)
     stereo_thresholds = list(pairs_per_th.keys())
-
+    thresholds_q = np.linspace(1, 10, 10)
+    thresholds_t = np.geomspace(0.2, 5, 10)
     # Load pose error for stereo
     for th in [None] + stereo_thresholds:
         pose_err_dict = load_h5_valid_image(get_stereo_pose_file(cfg, th),
@@ -267,31 +268,44 @@ def compute_qt_auc(res_dict, deprecated_images, cfg):
             err_qt += [value]
 
         if len(err_qt) > 0:
-            err_qt = np.asarray(err_qt)
+            err_qt = np.asarray(err_qt)[:,:2]
+            err_q = deepcopy(err_qt[:,:1]) * 180.0 / np.pi
+            err_t_meters = deepcopy(err_qt[:,2:3])
+
             # Take the maximum among q and t errors
             err_qt = np.max(err_qt, axis=1)
             # Convert to degree
             err_qt = err_qt * 180.0 / np.pi
             # Make infs to a large value so that np.histogram can be used.
             err_qt[err_qt == np.inf] = 1e6
+            err_q[err_q == np.inf] = 1e6
+
 
             # Create histogram
             bars = np.arange(11)
+
+            # This i
             qt_hist, _ = np.histogram(err_qt, bars)
+            acc_new = []
+            for th_q, th_t in zip(thresholds_q, thresholds_t):
+                acc_new += [((np.array(err_q) < th_q) * (np.array(err_t_meters) < th_t)).mean()]
             # Normalize histogram with all possible pairs
             num_pair = float(len(err_qt))
             qt_hist = qt_hist.astype(float) / num_pair
-
             # Make cumulative
             qt_acc = np.cumsum(qt_hist)
         else:
             qt_acc = [0] * 10
+            acc_new = [0] * 10
 
         # Save to dictionary
         label = '' if th is None else '_th_{}'.format(th)
         res_dict['qt_01_10{}'.format(label)] = qt_hist.tolist()
         res_dict['qt_auc_05{}'.format(label)] = np.mean(qt_acc[:5])
         res_dict['qt_auc_10{}'.format(label)] = np.mean(qt_acc)
+        res_dict['qtnew_01_10{}'.format(label)] = acc_new.tolist()
+        res_dict['qtnew_auc_05{}'.format(label)] = np.mean(acc_new[:5])
+        res_dict['qtnew_auc_10{}'.format(label)] = np.mean(acc_new)
 
 
 def compute_qt_auc_colmap(res_dict, deprecated_images, cfg):
